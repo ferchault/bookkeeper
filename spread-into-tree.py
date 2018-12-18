@@ -2,7 +2,7 @@
 """ Converts a list of files into a folder tree to increase access efficiency.
 
 Usage example:
-$ python spread-into-tree.py PREFIX <(find . -name "*xyz")
+$ python spread-into-tree.py PREFIX <(find . -maxdepth 1 -name "*xyz")
 
 creates a subfolder PREFIX in the current working directory and two nested levels of subdirectories amongst which all files matching *xyz are distributed.
 
@@ -29,6 +29,6 @@ for line in open(filelist):
 		try:
 			os.makedirs(newpath)
 		except FileExistsError:
-			continue
+			pass
 		created.append(newpath) 
 	os.rename(fullname, os.path.join(newpath, filename))
