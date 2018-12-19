@@ -6,6 +6,7 @@ import sys
 import numpy as np
 
 def find_similar_local_environments(filename, element=6):
+    """ Returns a list of sets of atoms with similar environments. Atoms are identified by their zero-based atom index."""
     c = qml.Compound(xyz=filename)
 
     # relevant atoms
@@ -30,7 +31,7 @@ def find_similar_local_environments(filename, element=6):
         for j in range(i+1, len(atoms)):
             dist = np.linalg.norm(sorted_elements[i] - sorted_elements[j])
             if dist < 1:
-                accepted.add_edge(i, j)
+                accepted.add_edge(atoms[i], atoms[j])
     return [list(_.nodes) for _ in nx.connected_component_subgraphs(accepted)]
 
 if len(sys.argv) != 2:
