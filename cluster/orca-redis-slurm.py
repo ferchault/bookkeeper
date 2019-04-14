@@ -152,3 +152,12 @@ if __name__ == '__main__':
 				tar.add(directory, recursive=True)
 				tar.close()
 				cache.requeue(fh.getvalue())
+		if sys.argv[1] == 'download-results':
+			while True:
+				result = cache.get_result()
+				if result is None:
+					break
+				fh = io.BytesIO(result)
+				tar = tarfile.open(fileobj=fh)
+				tar.extractall(path=path)
+				tar.close()
