@@ -1,0 +1,16 @@
+#!/bin/bash
+#SBATCH --job-name="orcamemory"
+#SBATCH --time=02:00:00
+#SBATCH --partition=normal
+#SBATCH --cpus-per-task=1
+#SBATCH --output=/dev/null
+#SBATCH --error=/dev/null
+
+source activate ~/REDIS/conda
+cd ~/workcopies/bookkeeper/cluster
+
+export PATH="/home/vonrudorff/orca/orca_4_0_1_2_linux_x86-64_openmpi202:$PATH" 
+export ORCACMD="/home/vonrudorff/orca/orca_4_0_1_2_linux_x86-64_openmpi202/orca"
+export ORCAPROJECT="e2sn2-debug"
+python orca-redis-slurm.py
+
