@@ -6,7 +6,7 @@
 #SBATCH --output=/dev/null
 #SBATCH --error=/dev/null
 
-source activate ~/REDIS/conda
+source /home/vonrudorff/opt/conda/install/bin/activate /home/vonrudorff/REDIS/conda
 cd ~/workcopies/bookkeeper/cluster
 
 export PATH="/home/vonrudorff/orca/orca_4_0_1_2_linux_x86-64_openmpi202:$PATH" 
