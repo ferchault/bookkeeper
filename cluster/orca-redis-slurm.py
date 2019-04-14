@@ -47,7 +47,7 @@ def get_slurm_deadline():
 def get_memory_scratch():
 	""" Returns largest ramdisk available on this machine to this user."""
 	# ugly
-	return '/run/user/1022'
+	return '/dev/shm'
 
 @contextmanager
 def workdir():
