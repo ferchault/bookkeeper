@@ -115,7 +115,7 @@ def run_orca(tasktar, deadline):
 if __name__ == '__main__':
 	cache = RedisCache()
 
-	if len(sys.args) == 1:
+	if len(sys.argv) == 1:
 		deadline = get_slurm_deadline()
 		result = None
 		while True:
@@ -137,7 +137,7 @@ if __name__ == '__main__':
 					# timeout hit
 					cache.requeue(tasktar)
 	else:
-		if sys.args[1] == 'upload-task':
+		if sys.argv[1] == 'upload-task':
 			for line in sys.stdin:
 				directory = line.strip()
 				fh = io.BytesIO()
