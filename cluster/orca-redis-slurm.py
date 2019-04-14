@@ -89,6 +89,14 @@ class RedisCache(object):
 	def get_result(self):
 		return self._con.lpop('%s-results' % self._project)
 
+	def count_results(self):
+		return self._con.llen('%s-results' % self._project)
+
+	def count_errors(self):
+		return self._con.llen('%s-errors' % self._project)
+
+	def count_tasks(self):
+		return self._con.llen('%s-tasks' % self._project)
 
 def run_orca(tasktar, deadline):
 	""" Gets a simple tarfile, runs it in memory, returns results as targz file."""
@@ -163,5 +171,9 @@ if __name__ == '__main__':
 					break
 				fh = io.BytesIO(result)
 				tar = tarfile.open(fileobj=fh)
-				tar.extractall(path=path)
+				tar.extractall()
 				tar.close()
+		if sys.argv[1] == 'status':
+			print ('Tasks:   %d' % cache.count_tasks())
+			print ('Results: %d' % cache.count_results())
+			print ('Errors:  %d' % cache.count_errors())
