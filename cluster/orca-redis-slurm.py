@@ -11,6 +11,7 @@ import shutil
 import tarfile
 import io
 import os
+import glob
 import random
 import sys
 import string
@@ -30,13 +31,17 @@ def get_slurm_deadline():
 		hours, minutes, seconds = rest.split(':')
 		return ((int(days)*24 + int(hours))*60 + int(minutes))*60 + int(seconds)
 
-	cmd = 'squeue -h -j $SLURM_JOB_ID -o "%L"'
+	cmd = 'squeue -h -j "$SLURM_JOB_ID" -o "%L"'
 	try:
-		output = subprocess.check_output(cmd, shell=True)
+		output = subprocess.check_output(cmd, shell=True).decode()
 	except:
 		return None
 
-	return slurm_seconds(output.strip()) + time.time()
+	try:
+		ret = slurm_seconds(output.strip()) + time.time()
+	except:
+		return None
+	return ret
 
 
 def get_memory_scratch():
@@ -95,7 +100,7 @@ def run_orca(tasktar, deadline):
 		tar.extractall(path=path)
 		tar.close()
 
-		inputpath = glob.glob('%s/**/run.inp' % path)[0]
+		inputpath = glob.glob('%s/**/run.inp' % path, recursive=True)[0]
 		inputpath = inputpath[:-len('/run.inp')]
 
 		try:
@@ -117,6 +122,7 @@ if __name__ == '__main__':
 
 	if len(sys.argv) == 1:
 		deadline = get_slurm_deadline()
+		print (deadline)
 		result = None
 		while True:
 			tasktar = cache.next(result)
@@ -128,6 +134,7 @@ if __name__ == '__main__':
 			try:
 				result = run_orca(tasktar, deadline)
 			except:
+				raise
 				haserror = True
 
 			if haserror:
