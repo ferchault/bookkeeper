@@ -163,5 +163,5 @@ if __name__ == '__main__':
 					break
 				fh = io.BytesIO(result)
 				tar = tarfile.open(fileobj=fh)
-				tar.extractall(path=path)
+				tar.extractall()
 				tar.close()
