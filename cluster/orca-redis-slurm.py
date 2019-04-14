@@ -94,8 +94,11 @@ def run_orca(tasktar, deadline):
 		tar.extractall(path=path)
 		tar.close()
 
+		inputpath = glob.glob('%s/**/run.inp' % path)[0]
+		inputpath = inputpath[:-len('/run.inp')]
+
 		try:
-			p = subprocess.run('%s run.inp > run.log' % os.getenv('ORCACMD'), shell=True, timeout=timeout, cwd=path)
+			p = subprocess.run('%s run.inp > run.log' % os.getenv('ORCACMD'), shell=True, timeout=timeout, cwd=inputpath)
 		except subprocess.TimeoutExpired:
 			return None
 
@@ -104,7 +107,7 @@ def run_orca(tasktar, deadline):
 		for fn in glob.glob('%s/*' % path):
 			if 'tmp' in fn or 'gbw' in fn:
 				continue
-			tar.add(fn)
+			tar.add(fn, recursive=False, arcname=fn[len(path):])
 		tar.close()
 		return fh.getvalue()
 
