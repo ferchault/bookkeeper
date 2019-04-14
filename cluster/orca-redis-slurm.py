@@ -12,6 +12,7 @@ import tarfile
 import io
 import os
 import random
+import sys
 import string
 from contextlib import contextmanager
 
@@ -112,24 +113,36 @@ def run_orca(tasktar, deadline):
 		return fh.getvalue()
 
 if __name__ == '__main__':
-	deadline = get_slurm_deadline()
 	cache = RedisCache()
-	result = None
-	while True:
-		tasktar = cache.next(result)
 
-		if tasktar is None:
-			break
+	if len(sys.args) == 1:
+		deadline = get_slurm_deadline()
+		result = None
+		while True:
+			tasktar = cache.next(result)
 
-		haserror = False
-		try:
-			result = run_orca(tasktar, deadline)
-		except:
-			haserror = True
+			if tasktar is None:
+				break
 
-		if haserror:
-			cache.errored(tasktar)
-		else:
-			if result is None:
-				# timeout hit
-				cache.requeue(tasktar)
+			haserror = False
+			try:
+				result = run_orca(tasktar, deadline)
+			except:
+				haserror = True
+
+			if haserror:
+				cache.errored(tasktar)
+			else:
+				if result is None:
+					# timeout hit
+					cache.requeue(tasktar)
+	else:
+		if sys.args[1] == 'upload-task':
+			for line in sys.stdin:
+				directory = line.strip()
+				fh = io.BytesIO()
+				tar = tarfile.open(mode='w:gz', fileobj=fh)
+				tar.add(directory, recursive=True)
+				tar.close()
+				cache.requeue(fh.getvalue())
+				
