@@ -68,18 +68,18 @@ class RedisCache(object):
 
 	def next(self, result):
 		if result is not None:
-			self._con.RPUSH('%s-results' % self._project, result)
+			self._con.rpush('%s-results' % self._project, result)
 
-		nexttask = self._con.LPOP('%s-tasks' % self._project)
+		nexttask = self._con.lpop('%s-tasks' % self._project)
 		if nexttask is None:
 			return None
 		return nexttask
 
 	def requeue(self, tasktar):
-		self._con.LPUSH('%s-tasks' % self._project, tasktar)
+		self._con.lpush('%s-tasks' % self._project, tasktar)
 
 	def errored(self, tasktar):
-		self._con.LPUSH('%s-errors' % self._project, tasktar)
+		self._con.lpush('%s-errors' % self._project, tasktar)
 
 
 def run_orca(tasktar, deadline):
