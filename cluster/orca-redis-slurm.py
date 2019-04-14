@@ -58,7 +58,7 @@ def workdir():
 		shutil.rmtree(path)
 
 class RedisCache(object):
-	def __init__(self, taskprefix):
+	def __init__(self):
 		connectionstring = open(os.path.expanduser('~/.redis-credentials')).readlines()[0].strip()
 		password, rest = connectionstring.split('@')
 		hostname, rest = rest.split(':')
