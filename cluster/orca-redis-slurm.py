@@ -22,13 +22,13 @@ def get_slurm_deadline():
 	""" Returns the linux epoch at which this job will be terminated if run in a slurm environment. None otherwise. """
 
 	def slurm_seconds(duration):
-        if '-' in duration:
-            days, rest = duration.split('-')
-        else:
-            days = 0
-            rest = duration
-        hours, minutes, seconds = rest.split(':')
-        return ((int(days)*24 + int(hours))*60 + int(minutes))*60 + int(seconds)
+		if '-' in duration:
+			days, rest = duration.split('-')
+		else:
+			days = 0
+		rest = duration
+		hours, minutes, seconds = rest.split(':')
+		return ((int(days)*24 + int(hours))*60 + int(minutes))*60 + int(seconds)
 
 	cmd = 'squeue -h -j $SLURM_JOB_ID -o "%L"'
 	try:
@@ -145,4 +145,3 @@ if __name__ == '__main__':
 				tar.add(directory, recursive=True)
 				tar.close()
 				cache.requeue(fh.getvalue())
-				
