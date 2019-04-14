@@ -110,9 +110,10 @@ def run_orca(tasktar, deadline):
 
 		fh = io.BytesIO()
 		tar = tarfile.open(mode='w:gz', fileobj=fh)
-		for fn in glob.glob('%s/*' % path):
+		for fn in glob.glob('%s/*' % inputpath):
 			if 'tmp' in fn or 'gbw' in fn:
 				continue
+			
 			tar.add(fn, recursive=False, arcname=fn[len(path):])
 		tar.close()
 		return fh.getvalue()
