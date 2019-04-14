@@ -86,6 +86,9 @@ class RedisCache(object):
 	def errored(self, tasktar):
 		self._con.lpush('%s-errors' % self._project, tasktar)
 
+	def get_result(self):
+		return self._con.lpop('%s-results' % self._project)
+
 
 def run_orca(tasktar, deadline):
 	""" Gets a simple tarfile, runs it in memory, returns results as targz file."""
