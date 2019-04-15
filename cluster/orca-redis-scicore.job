@@ -1,0 +1,23 @@
+#!/bin/bash
+#SBATCH --job-name="orcamemory"
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=1
+#SBATCH --ntasks=1
+#SBATCH --error=/dev/null
+#SBATCH --output=/dev/null
+#SBATCH --time-min=00:05:00
+#SBATCH --time=00:30:00
+#SBATCH --qos=30min
+#SBATCH --mem=5G
+
+module load OpenMPI/2.0.1-iccifort-2017.1.132-GCC-5.4.0-2.26
+module load Miniconda2/4.3.30
+source activate /scicore/home/lilienfeld/rudorff/REDIS/conda
+
+cd /scicore/home/lilienfeld/rudorff/workcopies/bookkeeper/cluster
+export PATH="/scicore/home/lilienfeld/rudorff/SHARE-NOBACKUP/orca_4_0_1_2_linux_x86-64_openmpi202/:$PATH" 
+export ORCACMD="/scicore/home/lilienfeld/rudorff/SHARE-NOBACKUP/orca_4_0_1_2_linux_x86-64_openmpi202/orca"
+export ORCAPROJECT="e2sn2-debug"
+export REDISCREDENTIALS="/scicore/home/lilienfeld/rudorff/.redis-credentials"
+python orca-redis-slurm.py
+
