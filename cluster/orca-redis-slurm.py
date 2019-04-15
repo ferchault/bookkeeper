@@ -28,7 +28,11 @@ def get_slurm_deadline():
 		else:
 			days = 0
 		rest = duration
-		hours, minutes, seconds = rest.split(':')
+		try:
+			hours, minutes, seconds = rest.split(':')
+		except:
+			hours = 0
+			minutes, seconds = rest.split(':')
 		return ((int(days)*24 + int(hours))*60 + int(minutes))*60 + int(seconds)
 
 	cmd = 'squeue -h -j "$SLURM_JOB_ID" -o "%L"'
@@ -64,7 +68,8 @@ def workdir():
 
 class RedisCache(object):
 	def __init__(self):
-		connectionstring = open(os.path.expanduser('~/.redis-credentials')).readlines()[0].strip()
+		connsource = os.getenv('REDISCREDENTIALS', '~/.redis-credentials')
+		connectionstring = open(os.path.expanduser(connsource)).readlines()[0].strip()
 		password, rest = connectionstring.split('@')
 		hostname, rest = rest.split(':')
 		port, db = rest.split('/')
