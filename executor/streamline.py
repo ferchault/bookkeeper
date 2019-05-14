@@ -23,10 +23,44 @@ if __name__ == '__main__':
     # connect
     con = get_connection()
     q = rq.Queue(queuekind, connection=con)
-
-    # build directory list
-    hostname = get_hostname()
+    
+    # get local job list
     directories = [_.strip() for _ in open(dirlist).readlines()]
+    stages = {'QUEUED': [], 'COMPLETED': []}
     for directory in directories:
-        tarfile = get_tarfile(directory)
-        q.enqueue(run_in_memory, hostname=hostname, directory=directory, script=script, targzfile=tarfile, result_ttl=365*24*3600, ttl=-1)
+        if directory.startswith('#'):
+            stages['COMPLETED'].append(directory[1:].strip())
+        else:
+            stages['QUEUED'].append(directory[1:].strip())
+
+    # get remote job list
+    hostname = get_hostname()
+    jobids = {get_job_id(queuekind, hostname, _, script): None for _ in stages['QUEUED']}
+
+    for job in rq.job.Job.fetch_many(jobids.keys(), connection=con):
+        jobids[job.id] = job.get_status()
+    
+    # compare
+    output = ['# %s' % _ for _ in stages['COMPLETED']]
+    for directory in stages['QUEUED']:
+        jobid = get_job_id(queuekind, hostname, _, script)
+        status = jobids[jobid]
+
+        # not submitted yet
+        if status is None:
+            tarfile = get_tarfile(directory)
+            q.enqueue(run_in_memory, job_id=jobid, hostname=hostname, directory=directory, script=script, targzfile=tarfile, result_ttl=365*24*3600, ttl=-1)
+            output.append(directory)
+        
+        # has results
+        if status == rq.job.JobStatus.FINISHED:
+            # download here
+            output.append('# %s' % directory)
+            raise NotImplementedError()
+
+    # write output
+    completed = [_ for _ in output if _[0] == '#']
+    print ('%d / %d finished' % (len(completed), len(output)))
+    with open(dirlist, 'w') as fh:
+        fh.write('\n'.join(output))
+    
