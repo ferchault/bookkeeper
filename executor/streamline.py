@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 """ Runs a command via a redis cluster in local network. Assumes that all relevant files (and only relevant files) are in the directories given.
 
-Usage: push.py long/short path/to/script.sh path/to/directory-list
+Usage: streamline.py long/short path/to/script.sh path/to/directory-list
+
+Directory list contains relative or absolute paths. Lines with # in front are considered to be completed. # will be added upon download of results.
 """
 
 import sys, socket, tarfile, io, os, subprocess
