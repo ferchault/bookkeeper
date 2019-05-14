@@ -47,11 +47,11 @@ if __name__ == '__main__':
     queuekind, scriptname, dirlist = sys.argv[1:]
     if queuekind not in 'short long'.split():
         raise ValueError('Unknown queue.')
-    script = get_script()
+    script = get_script(scriptname)
 
     # connect
     con = get_connection()
-    queue = Queue(queuekind, connection=con)
+    q = rq.Queue(queuekind, connection=con)
 
     # build directory list
     hostname = get_hostname()
