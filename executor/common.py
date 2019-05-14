@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import sys, socket, tarfile, io, os, subprocess
+import sys, socket, tarfile, io, os, subprocess, shutil
 import redis, rq
 
 def get_connection():
@@ -33,4 +33,7 @@ def run_in_memory(hostname, directory, script, targzfile):
     subprocess.run('./run.sh > run.log', shell=True, cwd='run')
 
     tarfile = get_tarfile('run')
+
+    shutil.rmtree('run')
+
     return tarfile
