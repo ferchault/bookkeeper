@@ -59,7 +59,7 @@ if __name__ == '__main__':
             raise NotImplementedError()
 
     # write output
-    completed = [_ for _ in output if _[0] == '#']
+    completed = [_[0] for _ in output if _[0] == '#']
     print ('%d / %d finished' % (len(completed), len(output)))
     with open(dirlist, 'w') as fh:
         fh.write('\n'.join(output))
