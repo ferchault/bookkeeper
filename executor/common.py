@@ -20,6 +20,11 @@ def get_tarfile(dirname):
     tar.close()
     return file_out.getvalue()
 
+def extract_tarfile(location, targzfile):
+    file_in = io.BytesIO(targzfile)
+    tar = tarfile.open(mode="r:gz", fileobj=file_in)
+    tar.extractall(location)
+
 def get_script(scriptname):
     return '\n'.join(open(scriptname).readlines())
 
@@ -33,9 +38,7 @@ def get_job_id(queue, hostname, directory, script):
 
 def run_in_memory(hostname, directory, script, targzfile, deadline):
     import tarfile, subprocess, shutil
-    file_in = io.BytesIO(targzfile)
-    tar = tarfile.open(mode="r:gz", fileobj=file_in)
-    tar.extractall('.')
+    extract_tarfile('.', targzfile)
 
     with open('run/run.sh', 'w') as fh:
         fh.write(script)

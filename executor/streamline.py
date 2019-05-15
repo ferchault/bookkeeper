@@ -62,15 +62,17 @@ if __name__ == '__main__':
             tarfile = get_tarfile(directory)
             q.enqueue(run_in_memory, job_id=jobid, hostname=hostname, directory=directory, script=script, targzfile=tarfile, result_ttl=365*24*3600, ttl=-1)
             output.append(directory)
-        
-        # has results
-        if status == rq.job.JobStatus.FINISHED:
-            # download here
-            output.append('# %s' % directory)
-            raise NotImplementedError()
-        else:
-            # still queued
-            output.append(directory)
+        else:    
+            # has results
+            if status == rq.job.JobStatus.FINISHED:
+                # download here
+                output.append('# %s' % directory)
+                targzfile = job.result
+                extract_tarfile(directory, targzfile)
+                job.delete()
+            else:
+                # still queued
+                output.append(directory)
 
     # write output
     completed = [_[0] for _ in output if _[0] == '#']
