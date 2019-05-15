@@ -50,7 +50,7 @@ def get_job_id(queue, hostname, directory, script):
 
 def run_in_memory(hostname, directory, script, targzfile, deadline):
     import tarfile, subprocess, shutil, os
-    extract_tarfile('.', tar)
+    extract_tarfile('.', targzfile)
 
     with open('run/run.sh', 'w') as fh:
         fh.write(script)
