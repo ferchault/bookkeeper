@@ -38,7 +38,12 @@ def extract_tarfile(location, targzfile, strip=False):
         tar.extractall(location)
 
 def get_script(scriptname):
-    return '\n'.join(open(scriptname).readlines())
+    try:
+        return '\n'.join(open(scriptname).readlines())
+    except FileNotFoundError:
+        pass
+    mydir = os.path.dirname(os.path.abspath(__file__))
+    return '\n'.join(open(os.path.join(mydir, 'codes', scriptname)))
 
 def get_hostname():
     return socket.gethostname()
