@@ -37,19 +37,21 @@ if __name__ == '__main__':
         if directory.startswith('#'):
             stages['COMPLETED'].append(directory[1:].strip())
         else:
-            stages['QUEUED'].append(directory[1:].strip())
+            stages['QUEUED'].append(directory.strip())
 
     # get remote job list
     hostname = get_hostname()
     jobids = {get_job_id(queuekind, hostname, _, script): None for _ in stages['QUEUED']}
 
     for job in rq.job.Job.fetch_many(jobids.keys(), connection=con):
+        if job is None:
+            continue
         jobids[job.id] = job.get_status()
     
     # compare
     output = ['# %s' % _ for _ in stages['COMPLETED']]
     for directory in stages['QUEUED']:
-        jobid = get_job_id(queuekind, hostname, _, script)
+        jobid = get_job_id(queuekind, hostname, directory, script)
         status = jobids[jobid]
 
         # not submitted yet

@@ -24,7 +24,7 @@ def get_hostname():
 
 def get_job_id(queue, hostname, directory, script):
     m = hashlib.sha256()
-    m.update('%s-%s-%s-%s' % (queue, hostname, directory, script).encode('utf-8'))
+    m.update(('%s-%s-%s-%s' % (queue, hostname, directory, script)).encode('utf-8'))
     return m.hexdigest()
 
 def run_in_memory(hostname, directory, script, targzfile, deadline):
@@ -57,7 +57,7 @@ def get_queue_length(queuename, connection):
 
 def get_worker_count(queuename, connection):
     workers = rq.Worker.all(connection=connection)
-    return len([_ for _ in workers]) if queuename in _.queues])
+    return len([_ for _ in workers if queuename in _.queues])
 
 def get_slurm_deadline():
     """ Returns the linux epoch at which this job will be terminated if run in a slurm environment. None otherwise. """
