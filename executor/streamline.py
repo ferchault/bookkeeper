@@ -77,4 +77,3 @@ if __name__ == '__main__':
     print ('%d / %d finished' % (len(completed), len(output)))
     with open(dirlist, 'w') as fh:
         fh.write('\n'.join(output))
-    
