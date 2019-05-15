@@ -48,13 +48,17 @@ if __name__ == '__main__':
     for job in rqjobs:
         if job is None:
             continue
-        jobids[job.id] = job.get_status()
+        jobids[job.id] = job
     
     # compare
     output = ['# %s' % _ for _ in stages['COMPLETED']]
     for directory in stages['QUEUED']:
         jobid = get_job_id(queuekind, hostname, directory, script)
-        status = jobids[jobid]
+        job = jobids[jobid]
+        if job is None:
+            status = None
+        else:
+            status = job.get_status()
 
         # not submitted yet
         if status is None:
