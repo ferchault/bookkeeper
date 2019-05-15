@@ -20,7 +20,8 @@ from common import *
 if __name__ == '__main__':
     # check args
     if len(sys.argv) != 4:
-        raise ValueError('Wrong arguments.')
+        print ('Usage: %s long/short path/to/script.sh path/to/directory-list' % sys.argv[0])
+        sys.exit(1)
     queuekind, scriptname, dirlist = sys.argv[1:]
     if queuekind not in 'short long'.split():
         raise ValueError('Unknown queue.')
