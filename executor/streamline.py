@@ -62,7 +62,6 @@ if __name__ == '__main__':
 
         # not submitted yet
         if status is None:
-            print (directory)
             tarfile = get_tarfile(directory)
             q.enqueue(run_in_memory, job_id=jobid, hostname=hostname, directory=directory, script=script, targzfile=tarfile, result_ttl=365*24*3600, ttl=-1)
             output.append(directory)
