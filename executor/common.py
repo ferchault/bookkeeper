@@ -65,7 +65,7 @@ def get_worker_count(queuename, connection):
     return len([_ for _ in workers if queuename in _.queues])
 
 def get_slurm_deadline():
-    """ Returns the linux epoch at which this job will be terminated if run in a slurm environment. None otherwise. """
+    """ Returns the linux epoch at which this job will be terminated if run in a slurm environment. 24h otherwise"""
 
     def slurm_seconds(duration):
             if '-' in duration:
@@ -84,12 +84,12 @@ def get_slurm_deadline():
     try:
             output = subprocess.check_output(cmd, shell=True).decode()
     except:
-            return None
+            return time.time() + 24*60*60
 
     try:
             ret = slurm_seconds(output.strip()) + time.time()
     except:
-            return None
+            return time.time() + 24*60*60
     return ret
 
 
