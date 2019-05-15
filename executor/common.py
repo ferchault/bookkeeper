@@ -3,7 +3,11 @@ import sys, socket, tarfile, io, os, subprocess, shutil, hashlib, time
 import redis, rq
 
 def get_connection():
-    connectionstring = open(os.path.expanduser('~/.redis-credentials')).readlines()[0].strip()
+    try:
+        connectionstring = open(os.path.expanduser('~/.redis-credentials')).readlines()[0].strip()
+    except:
+        print ('Unable to read credentials ~/.redis-credentials')
+        sys.exit(1)
     password, rest = connectionstring.split('@')
     hostname, rest = rest.split(':')
     port, db = rest.split('/')
