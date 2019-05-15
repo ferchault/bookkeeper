@@ -42,3 +42,11 @@ def run_in_memory(hostname, directory, script, targzfile):
     shutil.rmtree('run')
 
     return tarfile
+
+def get_queue_length(queuename, connection):
+    q = rq.Queue(queuename, connection=connection)
+    return q.count
+
+def get_worker_count(queuename, connection):
+    workers = rq.Worker.all(connection=connection)
+    return len([_ for _ in workers]) if queuename in _.queues])
