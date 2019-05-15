@@ -25,6 +25,9 @@ if __name__ == '__main__':
     queuekind, scriptname, dirlist = sys.argv[1:]
     if queuekind not in 'short long'.split():
         raise ValueError('Unknown queue.')
+    
+    if queuekind != 'short':
+        raise NotImplementedError()
     script = get_script(scriptname)
 
     # connect

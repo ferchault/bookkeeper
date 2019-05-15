@@ -21,18 +21,19 @@ if __name__ == '__main__':
     con = get_connection()
 
     # decide
-    numjobs = get_queue_count(queuekind, con)
+    numjobs = get_queue_length(queuekind, con)
     numworkers = get_worker_count(queuekind, con)
-
+    
     refill = False
-    if queue == 'long':
+    if queuekind == 'long':
+        raise NotImplementedError()
         # every job should be run separately
         if numjobs > numworkers:
             refill = True
-    if queue == 'short':
+    if queuekind == 'short':
         # jobs can be combined, estimate 5min per job, 2h per worker
         expected_current_load = numworkers * 60 / 5
         if numjobs > expected_current_load:
             refill = True
     
-    sys.exit(refill)
+    sys.exit(1 - int(refill))
