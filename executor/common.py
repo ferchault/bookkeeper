@@ -32,6 +32,7 @@ def get_job_id(queue, hostname, directory, script):
     return m.hexdigest()
 
 def run_in_memory(hostname, directory, script, targzfile, deadline):
+    import tarfile, subprocess, shutil
     file_in = io.BytesIO(targzfile)
     tar = tarfile.open(mode="r:gz", fileobj=file_in)
     tar.extractall('.')
