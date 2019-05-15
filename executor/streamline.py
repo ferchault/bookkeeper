@@ -7,13 +7,9 @@ Directory list contains relative or absolute paths. Lines with # in front are co
 
 Short queue:
 - few minutes runtime
-- discarded in case of job interruption
-- will be combined automatically
 
 Long queue:
 - at most 24 hours runtime
-- is run separately
-- failure is permanent, i.e. even with failure, the results are kept
 """
 
 import sys, socket, tarfile, io, os, subprocess

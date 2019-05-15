@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import sys, socket, tarfile, io, os, subprocess, shutil, hashlib
+import sys, socket, tarfile, io, os, subprocess, shutil, hashlib, time
 import redis, rq
 
 def get_connection():
@@ -27,7 +27,7 @@ def get_job_id(queue, hostname, directory, script):
     m.update('%s-%s-%s-%s' % (queue, hostname, directory, script).encode('utf-8'))
     return m.hexdigest()
 
-def run_in_memory(hostname, directory, script, targzfile):
+def run_in_memory(hostname, directory, script, targzfile, deadline):
     file_in = io.BytesIO(targzfile)
     tar = tarfile.open(mode="r:gz", fileobj=file_in)
     tar.extractall('.')
@@ -35,7 +35,15 @@ def run_in_memory(hostname, directory, script, targzfile):
     with open('run/run.sh', 'w') as fh:
         fh.write(script)
     
-    subprocess.run('./run.sh > run.log', shell=True, cwd='run')
+    # run job safely
+    now = time.time()
+    timeout = max(10, deadline - now - 120)
+    
+    try:
+        subprocess.run('./run.sh > run.log', shell=True, cwd='run', timeout=timeout)
+    except subprocess.TimeoutExpired:
+        shutil.rmtree('run')
+        raise ValueError('Not enough time.')
 
     tarfile = get_tarfile('run')
 
@@ -50,3 +58,41 @@ def get_queue_length(queuename, connection):
 def get_worker_count(queuename, connection):
     workers = rq.Worker.all(connection=connection)
     return len([_ for _ in workers]) if queuename in _.queues])
+
+def get_slurm_deadline():
+    """ Returns the linux epoch at which this job will be terminated if run in a slurm environment. None otherwise. """
+
+    def slurm_seconds(duration):
+            if '-' in duration:
+                    days, rest = duration.split('-')
+            else:
+                    days = 0
+            rest = duration
+            try:
+                    hours, minutes, seconds = rest.split(':')
+            except:
+                    hours = 0
+                    minutes, seconds = rest.split(':')
+            return ((int(days)*24 + int(hours))*60 + int(minutes))*60 + int(seconds)
+
+    cmd = 'squeue -h -j "$SLURM_JOB_ID" -o "%L"'
+    try:
+            output = subprocess.check_output(cmd, shell=True).decode()
+    except:
+            return None
+
+    try:
+            ret = slurm_seconds(output.strip()) + time.time()
+    except:
+            return None
+    return ret
+
+
+class DeadlineWorker(rq.worker.Worker):
+    def __init__():
+        # get deadline
+        self._deadline = get_slurm_deadline()
+
+    def execute_job(self, job, queue):
+        job.kwargs['deadline'] = self._deadline
+        super().work(job, queue)
