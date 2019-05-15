@@ -35,11 +35,10 @@ if __name__ == '__main__':
     directories = [_.strip() for _ in open(dirlist).readlines()]
     stages = {'QUEUED': [], 'COMPLETED': []}
     for directory in directories:
-        directory = os.path.abspath(directory)
         if directory.startswith('#'):
-            stages['COMPLETED'].append(directory[1:].strip())
+            stages['COMPLETED'].append(os.path.abspath(directory[1:].strip()))
         else:
-            stages['QUEUED'].append(directory.strip())
+            stages['QUEUED'].append(os.path.abspath(directory.strip()))
 
     # get remote job list
     hostname = get_hostname()
@@ -59,6 +58,7 @@ if __name__ == '__main__':
 
         # not submitted yet
         if status is None:
+            print (directory)
             tarfile = get_tarfile(directory)
             q.enqueue(run_in_memory, job_id=jobid, hostname=hostname, directory=directory, script=script, targzfile=tarfile, result_ttl=365*24*3600, ttl=-1)
             output.append(directory)
@@ -68,7 +68,7 @@ if __name__ == '__main__':
                 # download here
                 output.append('# %s' % directory)
                 targzfile = job.result
-                extract_tarfile(directory, targzfile)
+                extract_tarfile(directory, targzfile, strip=True)
                 job.delete()
             else:
                 # still queued
