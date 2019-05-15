@@ -49,7 +49,7 @@ def get_job_id(queue, hostname, directory, script):
     return m.hexdigest()
 
 def run_in_memory(hostname, directory, script, targzfile, deadline):
-    import tarfile, subprocess, shutil
+    import tarfile, subprocess, shutil, os
     extract_tarfile('.', tar)
 
     with open('run/run.sh', 'w') as fh:
@@ -66,6 +66,7 @@ def run_in_memory(hostname, directory, script, targzfile, deadline):
         shutil.rmtree('run')
         raise ValueError('Not enough time.')
 
+    os.remove('run/run.sh')
     tarfile = get_tarfile('run')
 
     shutil.rmtree('run')
