@@ -45,7 +45,8 @@ def run_in_memory(hostname, directory, script, targzfile, deadline):
     timeout = max(10, deadline - now - 120)
     
     try:
-        subprocess.run('./run.sh > run.log', shell=True, cwd='run', timeout=timeout)
+        with open('run/run.log', 'w') as fh:
+            subprocess.run('bash run.sh', shell=True, cwd='run', timeout=timeout, stdout=fh, stderr=fh)
     except subprocess.TimeoutExpired:
         shutil.rmtree('run')
         raise ValueError('Not enough time.')
