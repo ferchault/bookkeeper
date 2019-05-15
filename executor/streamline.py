@@ -3,7 +3,7 @@
 
 Usage: streamline.py long/short path/to/script.sh path/to/directory-list
 
-Directory list contains relative or absolute paths. Lines with # in front are considered to be completed. # will be added upon download of results.
+Directory list contains absolute paths only. Lines with # in front are considered to be completed. # will be added upon download of results.
 
 Short queue:
 - few minutes runtime
@@ -35,6 +35,7 @@ if __name__ == '__main__':
     directories = [_.strip() for _ in open(dirlist).readlines()]
     stages = {'QUEUED': [], 'COMPLETED': []}
     for directory in directories:
+        directory = os.path.abspath(directory)
         if directory.startswith('#'):
             stages['COMPLETED'].append(directory[1:].strip())
         else:
