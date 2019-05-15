@@ -93,11 +93,11 @@ def get_slurm_deadline():
 
 
 class DeadlineWorker(rq.worker.Worker):
-    def __init__():
+    def __init__(self, *args, **kwargs):
         # get deadline
         self._deadline = get_slurm_deadline()
         super().__init__(*args, **kwargs)
 
     def execute_job(self, job, queue):
         job.kwargs['deadline'] = self._deadline
-        super().work(job, queue)
+        super().execute_job(job, queue)
