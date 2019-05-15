@@ -45,7 +45,8 @@ if __name__ == '__main__':
     hostname = get_hostname()
     jobids = {get_job_id(queuekind, hostname, _, script): None for _ in stages['QUEUED']}
 
-    for job in rq.job.Job.fetch_many(jobids.keys(), connection=con):
+    rqjobs = rq.job.Job.fetch_many(list(jobids.keys()), connection=con)
+    for job in rqjobs:
         if job is None:
             continue
         jobids[job.id] = job.get_status()
@@ -67,6 +68,9 @@ if __name__ == '__main__':
             # download here
             output.append('# %s' % directory)
             raise NotImplementedError()
+        else:
+            # still queued
+            output.append(directory)
 
     # write output
     completed = [_[0] for _ in output if _[0] == '#']
