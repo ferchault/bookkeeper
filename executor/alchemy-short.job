@@ -1,0 +1,23 @@
+#!/bin/bash
+#SBATCH --job-name=executor
+#SBATCH --comment=ex-short
+#SBATCH --time=02:00:00
+#SBATCH --mem=5G
+#SBATCH --partition=classic,normal,hishort,highershort
+#SBATCH --cpus-per-task=1
+#SBATCH --ntasks=1
+#SBATCH --output=/dev/null
+#SBATCH --error=/dev/null
+
+source /home/vonrudorff/opt/conda/install/bin/activate /home/vonrudorff/REDIS/conda
+cd /dev/shm
+TMPDIR="executor-$SLURM_JOB_ID"
+mkdir $TMPDIR
+cd $TMPDIR
+timeout 6900 rq worker \
+	--burst \
+	--url=$(cat ~/.redis-credentials | sed 's/^/redis:\/\/:/;s/\/[^/]*$/\/1/') \
+	--path='/home/vonrudorff/workcopies/bookkeeper/executor' \
+	--worker-class "common.DeadlineWorker" short &> /dev/null
+cd /dev/shm
+rm -rf $TMPDIR
