@@ -1,0 +1,10 @@
+#!/bin/bash
+WORKDIR=/dev/shm/executor-$BASHPID
+mkdir -p "$WORKDIR"
+cd "$WORKDIR"
+rq worker \
+    --url=$(cat ~/.redis-credentials | sed 's/^/redis:\/\/:/;s/\/[^/]*$/\/1/') \
+    --path='/home/grudorff/workdirs/bookkeeper/executor' \
+    --worker-class "common.DeadlineWorker" short
+cd
+rm -rf "$WORKDIR"
