@@ -1,0 +1,9 @@
+#!/bin/bash
+#SBATCH --job-name=executor
+#SBATCH --time=02:00:00
+#SBATCH --partition=normal
+#SBATCH --cpus-per-task=1
+
+export OMP_NUM_THREADS=1
+source ~/.executor
+python worker.py worker --url "redis://$EXECUTOR_CONSTR" --burst --disable-job-desc-logging &> /dev/null
