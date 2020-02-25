@@ -17,6 +17,9 @@ def get_hostname():
 	if hostname == "bismuth":
 		return hostname
 
+	if hostname == "alchemy" or len(hostname) < 3:
+		return "alchemy"
+
 	raise NotImplementedError()
 
 class Task():

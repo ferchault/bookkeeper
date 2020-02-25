@@ -3,8 +3,9 @@ from redis import Redis
 from rq import Queue
 from job_registry import base
 import sys
+import os
 
-q = Queue(connection=Redis())
+q = Queue(connection=Redis.from_url("redis://" + os.environ.get('EXECUTOR_CONSTR', "127.0.0.1:6379/0")))
 
 filename = sys.argv[1]
 commandstring = sys.argv[2]
