@@ -11,7 +11,7 @@ commandstring = sys.argv[2]
 
 def enqueue(filename, commandstring):
 	result = q.enqueue(base.work, args=(filename, commandstring), timeout=5*60, result_ttl=365*24*60*60)
-	print (result.id)
+	print ("JOB:", result.id)
 
 if commandstring == "-":
 	for line in sys.stdin:

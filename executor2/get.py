@@ -10,15 +10,26 @@ from job_registry import base
 import sys
 
 jobid = sys.argv[1]
-try:
-	job = Job.fetch(jobid, connection=redis)
-except:
-	print ("NoSuchJob")
-	sys.exit(2)
 
-if job.get_status() == "finished":
-	print (job.result)
-	job.delete()
+def read_result(jobid):
+	try:
+		job = Job.fetch(jobid, connection=redis)
+	except:
+		print ("JOB:", jobid, "ERRORNoSuchJob")
+		return
+
+	if job.get_status() == "finished":
+		print (job.result)
+		job.delete()
+	else:
+		print ("JOB:", jobid, "WARNING%s" % job.get_status())
+
+if jobid == "-":
+	for line in sys.stdin:
+		if line.startswith("JOB: "):
+			jobid = line.strip().split()[1]
+			read_result(jobid)
+		else:
+			print (line[:-1])
 else:
-	print (job.get_status())
-	sys.exit(1)
+	read_result(jobid)
