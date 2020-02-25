@@ -26,7 +26,10 @@ class Task():
 			fh.write(commandstring.replace("###", "\n"))
 
 		# call xtb
-		path = {"bismuth": "/mnt/c/Users/guido/opt/xtb/6.2.2/bin/xtb"}[self._hostname]
+		path = {
+			"bismuth": "/mnt/c/Users/guido/opt/xtb/6.2.2/bin/xtb",
+			"alchemy": "/home/vonrudorff/opt/xtb/xtb_6.2.2/bin/xtb"
+		}[self._hostname]
 
 		with open("run.log", "w") as fh:
 			subprocess.run([path, "run.xyz"], stdout=fh, stderr=fh)
