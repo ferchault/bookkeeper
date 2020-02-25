@@ -1,10 +1,23 @@
 #!/usr/bin/env python
 import importlib
+import socket
 
 def work(filename, commandstring):
 	mod = importlib.import_module("job_registry.%s" % filename)
 	task = mod.Task()
 	return task.run(commandstring)
+
+def get_scratch(hostname):
+	if hostname == "bismuth":
+		return "/run/shm/"
+	raise NotImplementedError()
+
+def get_hostname():
+	hostname = socket.gethostname()
+	if hostname == "bismuth":
+		return hostname
+
+	raise NotImplementedError()
 
 class Task():
 	def __init__(self):
