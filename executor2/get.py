@@ -2,8 +2,9 @@
 from redis import Redis
 from rq import Queue
 from rq.job import Job
+import os
 
-redis = Redis()
+redis = Redis.from_url("redis://" + os.environ.get('EXECUTOR_CONSTR', "127.0.0.1:6379/0"))
 q = Queue(connection=redis)
 
 from job_registry import base
