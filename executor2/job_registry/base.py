@@ -10,6 +10,9 @@ def work(filename, commandstring):
 def get_scratch(hostname):
 	if hostname == "bismuth":
 		return "/run/shm/"
+
+	if hostname == "alchemy":
+		return "/dev/shm"
 	raise NotImplementedError()
 
 def get_hostname():
