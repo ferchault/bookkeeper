@@ -20,4 +20,4 @@ with open(arguments) as fh:
 	lines = fh.readlines()
 	for line in tqdm.tqdm(lines):
 		line = line[:-1]
-		enqueue(filename, line)
+		enqueue(taskname, line)
