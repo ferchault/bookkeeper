@@ -31,4 +31,4 @@ class Task():
 		pass
 	
 	def run(self, commandstring):
-		return len(commandstring)
+		return str(len(commandstring))
