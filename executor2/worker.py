@@ -44,7 +44,7 @@ while not guard.stopped:
 		redis.hset("job:" + jobid, "error", what)
 	redis.lrem("running", 1, jobid)
 	if errored:
-		redis.lpush("failed", jobid)
+		redis.lpush("%s:failed" % jobid, jobid)
 
 	duration = time.time() - starttime
 	# stats, expire 1min
