@@ -24,7 +24,10 @@ signal.signal(signal.SIGTERM, guard.handler)
 while not guard.stopped:
 	starttime = time.time()
 	# fetch
-	jobid = redis.rpoplpush("queue", "running").decode("utf-8")
+	jobid = redis.rpoplpush("queue", "running")
+	if jobid is None:
+		break
+	jobid = jobid.decode("utf-8")
 	commandstring = redis.hget("job:" + jobid, "arg").decode("utf-8")
 	filename = redis.hget("job:" + jobid, "fname").decode("utf-8")
 
