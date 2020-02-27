@@ -24,8 +24,9 @@ with open(arguments) as fh:
 # push to redis
 pipe = redis.pipeline()
 bulksize = 0
-for line in tqdm.tqdm(lines):
-	line = line.rstrip()
+totalentries = len(lines)
+for lineno in tqdm.tqdm(range(totalentries)):
+	line = lines[lineno].rstrip()
 	jobid = str(uuid.uuid4())
 	results.append("JOB: " + jobid)
 	
@@ -35,7 +36,9 @@ for line in tqdm.tqdm(lines):
 	if bulksize == 1000:
 		pipe.execute()
 		pipe = redis.pipeline()
-pipe.execute()
+		bulksize = 0
+	if lineno == totalentries -1:
+		pipe.execute()
 
 # write ids
 with open(resultfile, 'w') as fh:
