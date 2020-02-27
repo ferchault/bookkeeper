@@ -1,6 +1,45 @@
 #!/usr/bin/env python
-from pkg_resources import load_entry_point
+from redis import Redis
+from job_registry import base
 import sys
-import pickle
-pickle.HIGHEST_PROTOCOL = 2
-load_entry_point('rq', 'console_scripts', 'rq')()
+import os
+import time
+import traceback
+import importlib
+
+redis = Redis.from_url("redis://" + os.environ.get('EXECUTOR_CONSTR', "127.0.0.1:6379/0"))
+
+while True:
+	starttime = time.time()
+	# fetch
+	jobid = redis.rpoplpush("queue", "running").decode("utf-8")
+	commandstring = redis.hget("job:" + jobid, "arg").decode("utf-8")
+	filename = redis.hget("job:" + jobid, "fname").decode("utf-8")
+
+	# execute
+	errored = False
+	try:
+		mod = importlib.import_module("job_registry.%s" % filename)
+		task = mod.Task()
+		result = task.run(commandstring)
+		redis.hset("job:%s" % jobid, "result", result)
+	except:
+		errored = True
+		what = traceback.format_exc()
+		redis.hset("job:" + jobid, "error", what)
+	redis.lrem("running", 1, jobid)
+	if errored:
+		redis.lpush("failed", jobid)
+
+	duration = time.time() - starttime
+	# stats, expire 1min
+	prefix = 'stats:' + filename
+	if not redis.exists(prefix):
+		redis.hset(prefix, "init", "yes")
+		redis.expire(prefix, 60)
+		redis.delete(prefix + ":duration")
+		redis.delete(prefix + ":failed")
+	redis.lpush(prefix + ":duration", duration)
+	if errored:
+		redis.incr(prefix + ":failed")
+		
