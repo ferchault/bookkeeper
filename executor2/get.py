@@ -31,7 +31,7 @@ with open(current_resultfile) as fh:
 
 results = []
 for line in tqdm.tqdm(lines):
-	line = line[:-1]
+	line = line.rstrip()
 	if line.startswith("JOB: "):
 		jobid = line.strip().split()[1]
 		results.append(read_result(jobid))
