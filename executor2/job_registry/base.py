@@ -11,13 +11,13 @@ def get_scratch(hostname):
 	if hostname == "bismuth":
 		return "/run/shm/"
 
-	if hostname == "alchemy":
+	if hostname in ("alchemy", "avl03"):
 		return "/dev/shm"
 	raise NotImplementedError()
 
 def get_hostname():
 	hostname = socket.gethostname()
-	if hostname == "bismuth":
+	if hostname in ("bismuth", "avl03"):
 		return hostname
 
 	if hostname == "alchemy" or len(hostname) < 3:

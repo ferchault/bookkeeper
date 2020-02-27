@@ -6,11 +6,6 @@ import shutil
 import os
 import subprocess
 
-def work(filename, commandstring):
-	mod = importlib.import_module("job_registry.%s" % filename)
-	task = mod.Task()
-	return task.run(commandstring)
-
 class Task():
 	def __init__(self):
 		self._hostname = base.get_hostname()
@@ -28,7 +23,8 @@ class Task():
 		# call xtb
 		path = {
 			"bismuth": "/mnt/c/Users/guido/opt/xtb/6.2.2/bin/xtb",
-			"alchemy": "/home/vonrudorff/opt/xtb/xtb_6.2.2/bin/xtb"
+			"alchemy": "/home/vonrudorff/opt/xtb/xtb_6.2.2/bin/xtb",
+			"avl03": "/home/grudorff/opt/xtb/xtb_6.2.2/bin/xtb"
 		}[self._hostname]
 
 		with open("run.log", "w") as fh:
