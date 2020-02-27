@@ -3,9 +3,10 @@ from redis import Redis
 from job_registry import base
 import sys
 import os
+import uuid
 import tqdm
 
-con = Redis.from_url("redis://" + os.environ.get('EXECUTOR_CONSTR', "127.0.0.1:6379/0"))
+redis = Redis.from_url("redis://" + os.environ.get('EXECUTOR_CONSTR', "127.0.0.1:6379/0"))
 
 taskname = sys.argv[1]
 arguments = sys.argv[2]
