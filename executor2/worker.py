@@ -6,10 +6,22 @@ import os
 import time
 import traceback
 import importlib
+import signal
 
 redis = Redis.from_url("redis://" + os.environ.get('EXECUTOR_CONSTR', "127.0.0.1:6379/0"))
 
-while True:
+class Guard():
+	def __init__(self):
+		self.stopped = False
+	
+	def handler(self, signal, frame):
+		self.stopped = True
+
+guard = Guard()
+signal.signal(signal.SIGINT, guard.handler)
+signal.signal(signal.SIGTERM, guard.handler)
+
+while not guard.stopped:
 	starttime = time.time()
 	# fetch
 	jobid = redis.rpoplpush("queue", "running").decode("utf-8")
