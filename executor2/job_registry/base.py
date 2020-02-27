@@ -20,7 +20,7 @@ def get_hostname():
 	if hostname in ("bismuth", "avl03"):
 		return hostname
 
-	if hostname == "alchemy" or len(hostname) < 3:
+	if "alchemy" in hostname:
 		return "alchemy"
 
 	raise NotImplementedError()
