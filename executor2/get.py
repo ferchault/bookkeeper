@@ -14,19 +14,18 @@ def communicate(results, jobids):
 	pipe = redis.pipeline()
 	for jobid in jobids:
 		pipe.hget("job:%s" % jobid, "result")
-	results = pipe.execute()
+	downloaded = pipe.execute()
 
-	retval = []
 	pipe = redis.pipeline()
-	for result, jobid in zip(results, jobids):
+	for result, jobid in zip(downloaded, jobids):
 		if result is not None:
 			pipe.delete("job:%s" % jobid)
-			retval.append(result)
+			results.append(result)
 		else:
-			retval.append("JOB: " + jobid)
+			results.append("JOB: " + jobid)
 	pipe.execute()
 
-	return retval
+	return results
 
 # read current resultfile
 with open(current_resultfile) as fh:
