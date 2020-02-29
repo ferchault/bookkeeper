@@ -7,6 +7,7 @@ import time
 import traceback
 import importlib
 import signal
+import lz4.frame as lz4
 
 redis = Redis.from_url("redis://" + os.environ.get('EXECUTOR_CONSTR', "127.0.0.1:6379/0"))
 
@@ -28,7 +29,7 @@ while not guard.stopped:
 	if jobid is None:
 		break
 	jobid = jobid.decode("utf-8")
-	commandstring = redis.hget("job:" + jobid, "arg").decode("utf-8")
+	payload = redis.hget("job:" + jobid, "arg").decode("utf-8")
 	filename = redis.hget("job:" + jobid, "fname").decode("utf-8")
 
 	# execute
@@ -36,6 +37,7 @@ while not guard.stopped:
 	try:
 		mod = importlib.import_module("job_registry.%s" % filename)
 		task = mod.Task()
+		commandstring = lz4.decompress(payload).decode("ascii")
 		result = task.run(commandstring)
 		redis.hset("job:%s" % jobid, "result", result)
 	except:
