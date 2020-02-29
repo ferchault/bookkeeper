@@ -19,18 +19,20 @@ for source in glob.glob("job_registry/*.py"):
 	if source.startswith("__"):
 		continue
 	
-	if not redis.exists("stats:" + source):
-		continue
-
-	elapsed, items = get_throughput(source)
-	if elapsed < 10:
-		time.sleep(10)
+	if redis.exists("stats:" + source):
 		elapsed, items = get_throughput(source)
+		if elapsed < 10:
+			time.sleep(10)
+			elapsed, items = get_throughput(source)
 
-	failed = redis.get("stats:%s:failed" % source)
-	if failed is None:
+		failed = redis.get("stats:%s:failed" % source)
+		if failed is None:
+			failed = 0
+		speed = items/elapsed
+	else:
+		speed = 0
 		failed = 0
-	res.append({'source': source, 'throughput': items / elapsed, 'failed': failed, 'when': time.time()})
+	res.append({'source': source, 'throughput': speed, 'failed': failed, 'when': time.time()})
 	
 print (json.dumps(res))	
 
