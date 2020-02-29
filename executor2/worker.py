@@ -60,6 +60,8 @@ while not guard.stopped:
 	if errored:
 		pipe.incr(prefix + ":failed")
 		pipe.lpush("%s:failed" % jobid, jobid)
+	else:
+		pipe.hdel("job:" + jobid, "arg")
 	
 	pipe.hset("job:" + jobid, retkey, retcontent)
 	pipe.lrem("running", 1, jobid)
