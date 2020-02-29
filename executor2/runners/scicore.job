@@ -1,0 +1,15 @@
+#!/bin/bash -l
+#SBATCH --job-name=executor
+#SBATCH --time=00:30:00
+#SBATCH --qos=30min
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=1G
+#SBATCH --output=/dev/null 
+#SBATCH --error=/dev/null 
+#SBATCH --array=1-100
+
+export OMP_NUM_THREADS=1
+source ~/.executor
+conda activate redis-worker
+cd /scicore/home/lilienfeld/rudorff/workcopies/bookkeeper/executor2/ 
+python worker.py &> /dev/null
