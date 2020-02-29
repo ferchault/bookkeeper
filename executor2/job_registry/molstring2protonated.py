@@ -27,7 +27,7 @@ class Task():
 		self._CHgrid = scheme.points.copy()*1.09
 		
 		self._environments = []
-		number_neighbors = 12 # self + six neighbors (in 3d, the highest coordination with octahedral symmetry)
+		number_neighbors = 7 # self + six neighbors (in 3d, the highest coordination with octahedral symmetry)
 		for point in range(len(scheme.points)):
 			self._environments.append(([_ for _ in np.argpartition(np.linalg.norm(scheme.points[point]  - scheme.points, axis=1), number_neighbors)[:number_neighbors] if _ != point]))
 	
@@ -102,7 +102,6 @@ class Task():
 
 		expected = molstring.strip().split()[1:]
 
-		print ("check", set(actual)-set(expected), set(expected)-set(actual))
 		return set(actual) == set(expected)
 
 	def cleanup(self):
