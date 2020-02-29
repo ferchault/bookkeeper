@@ -29,8 +29,7 @@ while not guard.stopped:
 	if jobid is None:
 		break
 	jobid = jobid.decode("utf-8")
-	payload = redis.hget("job:" + jobid, "arg").decode("utf-8")
-	filename = redis.hget("job:" + jobid, "fname").decode("utf-8")
+	payload, filename = [_.decode("utf-8") for _ in redis.hmget("job:" + jobid, "arg", "fname")]
 
 	# execute
 	errored = False
@@ -39,24 +38,30 @@ while not guard.stopped:
 		task = mod.Task()
 		commandstring = lz4.decompress(payload).decode("ascii")
 		result = task.run(commandstring)
-		redis.hset("job:%s" % jobid, "result", result)
+		retkey = "result"
+		retcontent = result
 	except:
 		errored = True
 		what = traceback.format_exc()
-		redis.hset("job:" + jobid, "error", what)
-	redis.lrem("running", 1, jobid)
-	if errored:
-		redis.lpush("%s:failed" % jobid, jobid)
-
+		retkey = "error"
+		retcontent = what
+		
 	duration = time.time() - starttime
 	# stats, expire 1min
 	prefix = 'stats:' + filename
+	pipe = redis.pipeline()
 	if not redis.exists(prefix):
-		redis.hset(prefix, "init", "yes")
-		redis.expire(prefix, 60)
-		redis.delete(prefix + ":duration")
-		redis.delete(prefix + ":failed")
-	redis.lpush(prefix + ":duration", duration)
+		pipe.hset(prefix, "init", "yes")
+		pipe.expire(prefix, 60)
+		pipe.delete(prefix + ":duration")
+		pipe.delete(prefix + ":failed")
+
+	pipe.lpush(prefix + ":duration", duration)
 	if errored:
-		redis.incr(prefix + ":failed")
+		pipe.incr(prefix + ":failed")
+		pipe.lpush("%s:failed" % jobid, jobid)
+	
+	pipe.hset("job:" + jobid, retkey, retcontent)
+	pipe.lrem("running", 1, jobid)
 		
+	pipe.execute()
