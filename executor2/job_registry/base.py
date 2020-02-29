@@ -11,7 +11,7 @@ def get_scratch(hostname):
 	if hostname == "bismuth":
 		return "/run/shm/"
 
-	if hostname in ("alchemy", "avl03"):
+	if hostname in ("alchemy", "avl03", "scicore"):
 		return "/dev/shm"
 	raise NotImplementedError()
 
@@ -22,6 +22,9 @@ def get_hostname():
 
 	if "alchemy" in hostname:
 		return "alchemy"
+
+	if "cluster.bc2" in hostname:
+		return "scicore"
 
 	raise NotImplementedError()
 
