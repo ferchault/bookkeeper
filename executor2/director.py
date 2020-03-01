@@ -4,12 +4,15 @@ import time
 import os
 import sys
 
-def get_redis_capacity(redis_cpu_load, submitted_count_this_hour, total_queueing, total_running):
+def get_redis_capacity(redis_cpu_load, submitted_count_this_hour, total_queueing, total_running, queue_depth):
 	""" If negative, signals failure, requires halting."""
 	max_cpu = 0.8 					# accpeptable redis cpu load
 	max_per_hour = 2000 			# largest number of jobs started per hour
 	min_cores = 100					# smallest work force
 	accepted_failure_count = 100	# in last hour
+
+	if queue_depth == 0:
+		return 0
 
 	# redis load too high, back off
 	if redis_cpu_load > max_cpu:
@@ -67,8 +70,12 @@ def register_capacity(redis, capacity):
 		redis.lpush(keyname, "work")
 	redis.expire(keyname, 60*10)
 
+def get_queue_depth(redis_work):
+	return redis_work.llen("queue")
+
 if __name__ == "__main__":
 	constr = os.environ.get('EXECUTOR_CONSTR', "127.0.0.1:6379/0")
+	redis_work = Redis.from_url("redis://" + constr)
 
 	# change db to 0
 	parts = constr.split("/")
@@ -85,8 +92,9 @@ if __name__ == "__main__":
 	submitted_count_this_hour = get_submitted_this_hour(redis)
 	total_queueing = get_queueing(redis)
 	total_running = get_running(redis)
+	queue_depth = get_queue_depth(redis_work)
 
-	capacity = get_redis_capacity(redis_cpu_load, submitted_count_this_hour, total_queueing, total_running)
+	capacity = get_redis_capacity(redis_cpu_load, submitted_count_this_hour, total_queueing, total_running, queue_depth)
 	if capacity < 0:
 		redis.set("meta:operational", "no".encode("ascii"))
 
