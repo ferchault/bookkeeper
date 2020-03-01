@@ -2,6 +2,8 @@
 from job_registry import base
 import getpass
 from redis import Redis
+import os
+import subprocess
 
 constr = os.environ.get('EXECUTOR_CONSTR', "127.0.0.1:6379/0")
 
@@ -23,7 +25,7 @@ with open(tmpfile) as fh:
 	lines = fh.readlines()
 
 running = len([_ for _ in lines if "RUNNING" in _])
-pending = len(lines) - len(running)
+pending = len(lines) - running
 
 keyname = "%s-%s" % (hostname, username)
 redis.hset("meta:queued", keyname, pending)
