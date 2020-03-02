@@ -3,12 +3,13 @@ from redis import Redis
 import os
 import tqdm
 
-redis = Redis.from_url("redis://" + os.environ.get('EXECUTOR_CONSTR', "127.0.0.1:6379/0"))
+redis = Redis.from_url("redis://" + os.environ.get("EXECUTOR_CONSTR", "127.0.0.1:6379/0"))
 
 from job_registry import base
 import sys
 
 current_resultfile = sys.argv[1]
+
 
 def communicate(results, jobids):
 	pipe = redis.pipeline()
@@ -26,6 +27,7 @@ def communicate(results, jobids):
 	pipe.execute()
 
 	return results
+
 
 # read current resultfile
 with open(current_resultfile) as fh:
@@ -50,4 +52,4 @@ for line in tqdm.tqdm(lines):
 results = communicate(results, jobids)
 
 with open(current_resultfile, "w") as fh:
-	fh.write('\n'.join(results) + "\n")
+	fh.write("\n".join(results) + "\n")

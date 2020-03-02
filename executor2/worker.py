@@ -9,14 +9,16 @@ import importlib
 import signal
 import lz4.frame as lz4
 
-redis = Redis.from_url("redis://" + os.environ.get('EXECUTOR_CONSTR', "127.0.0.1:6379/0"))
+redis = Redis.from_url("redis://" + os.environ.get("EXECUTOR_CONSTR", "127.0.0.1:6379/0"))
 
-class Guard():
+
+class Guard:
 	def __init__(self):
 		self.stopped = False
-	
+
 	def handler(self, signal, frame):
 		self.stopped = True
+
 
 guard = Guard()
 signal.signal(signal.SIGINT, guard.handler)
@@ -51,10 +53,10 @@ while not guard.stopped:
 		what = traceback.format_exc()
 		retkey = "error"
 		retcontent = what
-		
+
 	duration = time.time() - starttime
 	# stats, expire 1min
-	prefix = 'stats:' + filename
+	prefix = "stats:" + filename
 	pipe = redis.pipeline()
 	if not redis.exists(prefix):
 		pipe.hset(prefix, "init", "yes")
@@ -68,8 +70,8 @@ while not guard.stopped:
 		pipe.lpush("%s:failed" % jobid, jobid)
 	else:
 		pipe.hdel("job:" + jobid, "arg")
-	
+
 	pipe.hset("job:" + jobid, retkey, retcontent)
 	pipe.lrem("running", 1, jobid)
-		
+
 	pipe.execute()

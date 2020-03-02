@@ -14,4 +14,4 @@ task = mod.Task()
 
 for line in sys.stdin:
 	commandstring = line[:-1]
-	print (task.run(commandstring))
+	print(task.run(commandstring))

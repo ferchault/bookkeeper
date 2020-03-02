@@ -6,12 +6,12 @@ import os
 import subprocess
 import time
 
-constr = os.environ.get('EXECUTOR_CONSTR', "127.0.0.1:6379/0")
+constr = os.environ.get("EXECUTOR_CONSTR", "127.0.0.1:6379/0")
 
 # change db to 0
 parts = constr.split("/")
 parts[-1] = "0"
-constr = '/'.join(parts)
+constr = "/".join(parts)
 
 redis = Redis.from_url("redis://" + constr)
 
@@ -24,7 +24,7 @@ username = getpass.getuser()
 
 tmpfile = ".autoscaler-tmp"
 with open(tmpfile, "w") as fh:
-	subprocess.run(['squeue', '-u', username, '-r', '-h', '-n', 'executor', '-O', 'state'], stdout=fh, stderr=fh)
+	subprocess.run(["squeue", "-u", username, "-r", "-h", "-n", "executor", "-O", "state"], stdout=fh, stderr=fh)
 
 with open(tmpfile) as fh:
 	lines = fh.readlines()
@@ -41,7 +41,7 @@ for i in range(free_slots):
 	has_work = redis.rpoplpush("meta:capacity", keyname)
 	if has_work is None:
 		break
-	subprocess.run(['sbatch', 'runners/%s.job' % hostname])
+	subprocess.run(["sbatch", "runners/%s.job" % hostname])
 	added += 1
 
 keyname = "%s-%s" % (hostname, username)
