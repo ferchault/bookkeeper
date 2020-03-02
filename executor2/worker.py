@@ -29,8 +29,13 @@ while not guard.stopped:
 	if jobid is None:
 		break
 	jobid = jobid.decode("utf-8")
-	payload, filename = redis.hmget("job:" + jobid, "arg", "fname")
-	filename = filename.decode("utf-8")
+	try:
+		payload, filename = redis.hmget("job:" + jobid, "arg", "fname")
+		filename = filename.decode("utf-8")
+	except:
+		# No valid job decription available anymore
+		redis.lrem("running", 1, jobid)
+		continue
 
 	# execute
 	errored = False
