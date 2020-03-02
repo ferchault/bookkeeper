@@ -20,7 +20,7 @@ for job in redis.lrange("running", 0, -1):
 	jobids_now.append(jobid)
 
 # resubmit stale at the _end_ of the queue to give them higher priority
-if jobids_last_run is None:
+if jobids_last_run is not None:
 	pipe = redis.pipeline()
 	for jobid in set(jobids_last_run) & set(jobids_now):
 		pipe.rpush("queue", jobid)
@@ -28,5 +28,5 @@ if jobids_last_run is None:
 	pipe.execute()
 
 # write new list
-with open(tmpfile) as fh:
+with open(tmpfile, "w") as fh:
 	fh.write("\n".join(jobids_now))
