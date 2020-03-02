@@ -21,7 +21,7 @@ def communicate(results, jobids):
 	for result, jobid in zip(downloaded, jobids):
 		if result is not None:
 			pipe.delete("job:%s" % jobid)
-			results.append(result)
+			results.append(result.decode("ascii"))
 		else:
 			results.append("JOB: " + jobid)
 	pipe.execute()
