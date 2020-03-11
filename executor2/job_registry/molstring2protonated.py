@@ -88,13 +88,16 @@ class Task():
 		with open("wbo") as fh:
 			lines = fh.readlines()
 		bonds = []
+		bondorders = []
 		for line in lines:
-			parts = line.strip().split()[:2]
+			parts = line.strip().split()
+			bondorders.append(float(parts[-1]))
+			parts = parts[:2]
 			parts = [int(_)-1 for _ in parts]
 			parts = (min(parts), max(parts))
 			bonds.append(parts)
 
-		return geometry, bonds, energy, vertical_energy
+		return bondorders, geometry, bonds, energy, vertical_energy
 
 	def checkgraph(self, bonds, molstring):
 		actual = []
@@ -189,11 +192,29 @@ class Task():
 		geometry = self.molstring2uff(commandstring)
 		
 		# neutral opt
-		geometry, bonds, final_energy, vertical_energy = self.xtbgeoopt(geometry, charge=0)
+		bondorders, geometry, bonds, final_energy, vertical_energy = self.xtbgeoopt(geometry, charge=0)
 
 		if not self.checkgraph(bonds, commandstring):
 			self.cleanup()
 			return "ERROR: UFF to xTB did not converge to the same molecule"
+
+		# build output
+		data = {}
+		#data['elements'] = elements
+		#data['esps'] = esps
+		#data['protonatedgeos'] = protonated_geos
+		#data['atoms'] = atoms
+		#data['positions'] = positions
+		data['neutralgeometry'] = geometry
+		data['energy'] = final_energy
+		data['bonds'] = bonds
+		data['bondorders'] = bondorders
+		#data['vertical_energies'] = verticals
+		#data['relaxed_energies'] = relaxed_energies
+		data = json.dumps(data)
+
+		self.cleanup()
+		return data
 
 		# get esp minima
 		Zs, atoms, positions, esps = self.xtbespminima(geometry)
@@ -215,17 +236,4 @@ class Task():
 			else:
 				protonated_geos.append(protonated_geometry)
 
-		# build output
-		data = {}
-		data['elements'] = elements
-		data['esps'] = esps
-		data['protonatedgeos'] = protonated_geos
-		data['atoms'] = atoms
-		data['positions'] = positions
-		data['neutralgeometry'] = geometry
-		data['vertical_energies'] = verticals
-		data['relaxed_energies'] = relaxed_energies
-		data = json.dumps(data)
-
-		self.cleanup()
-		return data
+		

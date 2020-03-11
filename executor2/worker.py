@@ -67,7 +67,7 @@ while not guard.stopped:
 	pipe.lpush(prefix + ":duration", duration)
 	if errored:
 		pipe.incr(prefix + ":failed")
-		pipe.lpush("%s:failed" % jobid, jobid)
+		pipe.lpush("%s:failed" % filename, jobid)
 	else:
 		pipe.hdel("job:" + jobid, "arg")
 
