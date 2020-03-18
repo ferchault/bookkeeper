@@ -22,7 +22,7 @@ if redis.get("meta:operational").decode("ascii") != "yes":
 hostname = base.get_hostname()
 username = getpass.getuser()
 
-tmpfile = ".autoscaler-tmp"
+tmpfile = "/tmp/%s.autoscaler-tmp" % username
 with open(tmpfile, "w") as fh:
 	subprocess.run(["squeue", "-u", username, "-r", "-h", "-n", "executor", "-O", "state"], stdout=fh, stderr=fh)
 
