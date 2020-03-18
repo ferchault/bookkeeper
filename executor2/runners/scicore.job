@@ -22,6 +22,7 @@ else
 fi
 unset __conda_setup
 # <<< conda initialize <<<
+conda activate redis-worker
 
 cd /scicore/home/lilienfeld/rudorff/workcopies/bookkeeper/executor2/ 
 python worker.py &> /dev/null
