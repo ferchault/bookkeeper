@@ -1,4 +1,4 @@
-#!/bin/bash -l
+#!/bin/bash
 #SBATCH --job-name=executor
 #SBATCH --time=00:30:00
 #SBATCH --qos=30min
