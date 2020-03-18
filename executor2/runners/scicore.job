@@ -8,7 +8,20 @@
 #SBATCH --error=/dev/null 
 
 export OMP_NUM_THREADS=1
-source ~/.executor
-conda activate redis-worker
+source /scicore/home/lilienfeld/rudorff/.executor
+# !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$('/scicore/home/lilienfeld/rudorff/opt/conda/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/scicore/home/lilienfeld/rudorff/opt/conda/etc/profile.d/conda.sh" ]; then
+        . "/scicore/home/lilienfeld/rudorff/opt/conda/etc/profile.d/conda.sh"
+    else
+        export PATH="/scicore/home/lilienfeld/rudorff/opt/conda/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+# <<< conda initialize <<<
+
 cd /scicore/home/lilienfeld/rudorff/workcopies/bookkeeper/executor2/ 
 python worker.py &> /dev/null
