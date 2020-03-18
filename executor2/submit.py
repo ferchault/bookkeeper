@@ -13,6 +13,10 @@ taskname = sys.argv[1]
 arguments = sys.argv[2]
 resultfile = sys.argv[3]
 
+# safety check
+if os.path.exists(resultfile):
+	raise ValueError("Won't overwrite existing result file.")
+
 # read commands
 results = []
 with open(arguments) as fh:
