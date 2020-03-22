@@ -5,6 +5,7 @@ from redis import Redis
 import os
 import subprocess
 import time
+import sys
 
 constr = os.environ.get("EXECUTOR_CONSTR", "127.0.0.1:6379/0")
 
