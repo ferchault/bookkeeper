@@ -18,7 +18,6 @@ class Task():
 
 		self._xtbpath = {
 			"bismuth": "/mnt/c/Users/guido/opt/xtb/6.2.2/bin/xtb",
-			"scicore": "/scicore/home/lilienfeld/rudorff/opt/xtb/xtb_6.2.2/bin/xtb",
 			"alchemy": "/home/vonrudorff/opt/xtb/xtb_6.2.2/bin/xtb",
 			"avl03": "/home/grudorff/opt/xtb/xtb_6.2.2/bin/xtb"
 		}[self._hostname]
@@ -192,7 +191,10 @@ class Task():
 		geometry = self.molstring2uff(commandstring)
 		
 		# neutral opt
-		bondorders, geometry, bonds, final_energy, vertical_energy = self.xtbgeoopt(geometry, charge=0)
+		try:
+			bondorders, geometry, bonds, final_energy, vertical_energy = self.xtbgeoopt(geometry, charge=0)
+		except FileNotFoundError:
+			return "ERROR: unable to optimize in xTB"
 
 		if not self.checkgraph(bonds, commandstring):
 			self.cleanup()
