@@ -19,7 +19,8 @@ class Task():
 		self._xtbpath = {
 			"bismuth": "/mnt/c/Users/guido/opt/xtb/6.2.2/bin/xtb",
 			"alchemy": "/home/vonrudorff/opt/xtb/xtb_6.2.2/bin/xtb",
-			"avl03": "/home/grudorff/opt/xtb/xtb_6.2.2/bin/xtb"
+			"avl03": "/home/grudorff/opt/xtb/xtb_6.2.2/bin/xtb",
+			"scicore": "/scicore/home/lilienfeld/rudorff/opt/xtb/xtb_6.2.2/bin/xtb"
 		}[self._hostname]
 		# grid
 		scheme = quadpy.sphere.lebedev_031()
