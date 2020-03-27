@@ -48,6 +48,7 @@ while not guard.stopped:
 			mod = importlib.import_module("job_registry.%s" % filename)
 			cache[filename] = mod.Task()
 		task = cache[filename]
+		task.connection = redis
 		commandstring = lz4.decompress(payload).decode("ascii")
 		result = task.run(commandstring)
 		retkey = "result"
