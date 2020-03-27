@@ -24,6 +24,8 @@ guard = Guard()
 signal.signal(signal.SIGINT, guard.handler)
 signal.signal(signal.SIGTERM, guard.handler)
 
+cache = []
+
 while not guard.stopped:
 	starttime = time.time()
 	# fetch
@@ -42,8 +44,10 @@ while not guard.stopped:
 	# execute
 	errored = False
 	try:
-		mod = importlib.import_module("job_registry.%s" % filename)
-		task = mod.Task()
+		if filename not in cache:
+			mod = importlib.import_module("job_registry.%s" % filename)
+			cache[filename] = mod.Task()
+		task = cache[filename]
 		commandstring = lz4.decompress(payload).decode("ascii")
 		result = task.run(commandstring)
 		retkey = "result"
