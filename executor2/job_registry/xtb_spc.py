@@ -7,7 +7,7 @@ import os
 import subprocess
 
 class Task():
-	def __init__(self):
+	def __init__(self, connection):
 		self._hostname = base.get_hostname()
 		self._scratch = base.get_scratch(self._hostname)
 		self._tmpdir = self._scratch + "/" + str(uuid.uuid4())

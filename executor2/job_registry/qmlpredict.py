@@ -28,7 +28,8 @@ class Task():
 		self.connection.set("qml-structures", gzip.compress(('\n'.join(lines)).encode('ascii')))
 		self.connection.set("qml-alphas", gzip.compress(open(f'{basename}alpha.dat').read().encode('ascii')))
 		
-	def __init__(self):
+	def __init__(self, connection):
+		self.connection = connection
 		#self._upload()
 
 		lines = gzip.decompress(self.connection.get("qml-structures")).decode('ascii').split("\n")
