@@ -24,7 +24,7 @@ guard = Guard()
 signal.signal(signal.SIGINT, guard.handler)
 signal.signal(signal.SIGTERM, guard.handler)
 
-cache = []
+cache = {}
 
 while not guard.stopped:
 	starttime = time.time()
