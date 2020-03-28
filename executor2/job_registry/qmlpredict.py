@@ -15,11 +15,6 @@ class MockXYZ(object):
 		return self._lines
 
 class Task():
-	def _save(self, label, variable):
-		redis.set(f"qmlpredict-cache:{label}", variable.tostring('C'))
-		shape = ':'.join([str(_) for _ in variable.shape])
-		redis.set(f"qmlpredict-cache:{label}:shape", shape)
-
 	def _upload(self):
 		cutoff = 9000
 		basename = '/mnt/c/Users/guido/data/tmp-enrico/'
@@ -30,14 +25,14 @@ class Task():
 			filename = f'{basename}random/random-{geo}.xyz'
 			lines += [_.strip() for _ in open(filename).readlines()]
 		
-		redis.set("qml-structures", gzip.compress(('\n'.join(lines)).encode('ascii')))
-		redis.set("qml-alphas", gzip.compress(open(f'{basename}alpha.dat').read().encode('ascii')))
+		self.connection.set("qml-structures", gzip.compress(('\n'.join(lines)).encode('ascii')))
+		self.connection.set("qml-alphas", gzip.compress(open(f'{basename}alpha.dat').read().encode('ascii')))
 		
 	def __init__(self):
 		#self._upload()
 
-		lines = gzip.decompress(redis.get("qml-structures")).decode('ascii').split("\n")
-		q = gzip.decompress(redis.get("qml-alphas")).decode('ascii').strip().split("\n")
+		lines = gzip.decompress(self.connection.get("qml-structures")).decode('ascii').split("\n")
+		q = gzip.decompress(self.connection.get("qml-alphas")).decode('ascii').strip().split("\n")
 		alphas = np.array([float(_) for _ in q])
 		
 		reps = []
