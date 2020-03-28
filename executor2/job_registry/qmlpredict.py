@@ -30,7 +30,7 @@ class Task():
 		
 	def __init__(self, connection):
 		self.connection = connection
-		#self._upload()
+		self._upload()
 
 		lines = gzip.decompress(self.connection.get("qml-structures")).decode('ascii').split("\n")
 		q = gzip.decompress(self.connection.get("qml-alphas")).decode('ascii').strip().split("\n")
