@@ -26,8 +26,8 @@ class Task():
 		#	lines += [_.strip() for _ in open(filename).readlines()]
 		
 		#self.connection.set("qml-structures", gzip.compress(('\n'.join(lines)).encode('ascii')))
-		self.connection.set("qml-alphas1", gzip.compress(open(f'{basename}alpha-S1.dat').read().encode('ascii')))
-		self.connection.set("qml-alphas2", gzip.compress(open(f'{basename}alpha-S2.dat').read().encode('ascii')))
+		self.connection.set("qml-alphas1", gzip.compress(open(f'{basename}alpha-o1.dat').read().encode('ascii')))
+		self.connection.set("qml-alphas2", gzip.compress(open(f'{basename}alpha-o2.dat').read().encode('ascii')))
 		
 	def __init__(self, connection):
 		self.connection = connection
@@ -60,7 +60,7 @@ class Task():
 		c = qml.Compound(xyz=xyz)
 		rep = qml.representations.generate_fchl_acsf(c.nuclear_charges, c.coordinates, gradients=False, pad=31, elements=[1,6,8])
 		
-		K = qml.kernels.get_local_kernel(self._reps, np.array([rep]), self._Qs, [c.nuclear_charges], 65.536)
+		K = qml.kernels.get_local_kernel(self._reps, np.array([rep]), self._Qs, [c.nuclear_charges], 0.128)
 		preds1 = np.dot(K, self._alphas1)[0]
 		preds2 = np.dot(K, self._alphas2)[0]
 
