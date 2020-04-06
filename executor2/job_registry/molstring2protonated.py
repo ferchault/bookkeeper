@@ -186,7 +186,10 @@ class Task():
 		return newgeo
 
 	def run(self, commandstring):
-		os.makedirs(self._tmpdir)
+		try:
+			os.makedirs(self._tmpdir)
+		except FileExistsError:
+			pass
 		os.chdir(self._tmpdir)
 
 		geometry = self.molstring2uff(commandstring)
