@@ -4,7 +4,6 @@ import time
 import os
 import sys
 
-
 def get_redis_capacity(redis_cpu_load, submitted_count_this_hour, total_queueing, total_running, queue_depth):
 	""" If negative, signals failure, requires halting."""
 	max_cpu = 0.8  # accpeptable redis cpu load
@@ -32,9 +31,11 @@ def get_redis_capacity(redis_cpu_load, submitted_count_this_hour, total_queueing
 		return min_cores - total_queueing - total_running
 
 	# default case: business as usual
+	total_running = max(1, total_running)
 	load_per_core = redis_cpu_load / total_running
 	max_jobs = max_cpu / load_per_core
 	top_up = max(0, max_jobs - total_running - total_queueing)
+	top_up = min(500, top_up)
 	return int(top_up)
 
 
@@ -105,6 +106,7 @@ if __name__ == "__main__":
 
 	capacity = get_redis_capacity(redis_cpu_load, submitted_count_this_hour, total_queueing, total_running, queue_depth)
 	if capacity < 0:
-		redis.set("meta:operational", "no".encode("ascii"))
+		msg = [redis_cpu_load, submitted_count_this_hour, total_queueing, total_running, queue_depth]
+		redis.set("meta:operational", ("no" + str(msg)).encode("ascii"))
 
 	register_capacity(redis, capacity)
