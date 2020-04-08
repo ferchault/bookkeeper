@@ -137,6 +137,7 @@ class Task():
 				print ("accepted")
 				accepted_energies.append(energy)
 				accepted_geometries.append(geometry)
+				accepted_bondorders.append(bondorders)
 		
 		results = {}
 		results['mol'] = molname
