@@ -109,6 +109,14 @@ class Task():
 
 		return bondorders, geometry, bonds, energy, vertical_energy
 
+	def _condense_geo(self, instring):
+		lines = instring.split("\n")[2:]
+		res = []
+		for line in lines:
+			parts = line.strip().split()
+			res.append(" ".join(parts))
+		return "\n".join(res).strip()
+
 	def _do_workpackage(self, molname, dihedrals, resolution):
 		ndih = len(dihedrals)
 		start, step, n_steps = self._clockwork(resolution)
@@ -146,17 +154,17 @@ class Task():
 					include = False
 			if include:
 				accepted_energies.append(energy)
-				accepted_geometries.append(geometry)
+				accepted_geometries.append(self._condense_geo(geometry))
 				accepted_bondorders.append(bondorders)
 				accepted_reps.append(rep)
 		
 		results = {}
 		results['mol'] = molname
-		results['ndih'] = ndih
+		results['dih'] = dihedrals
 		results['res'] = resolution
-		results['geometries'] = accepted_geometries
-		results['energies'] = accepted_energies
-		results['bondorders'] = accepted_bondorders
+		results['geo'] = accepted_geometries
+		results['ene'] = accepted_energies
+		results['wbo'] = accepted_bondorders
 		return results
 
 	def run(self, commandstring):
