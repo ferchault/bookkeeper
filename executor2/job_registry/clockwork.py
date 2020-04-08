@@ -134,14 +134,17 @@ class Task():
 			# require same molecule
 			if set(bonds) != self._bonds:
 				continue
+
+			# check for similar energies in list
+			compare_required = np.where(np.abs(np.array(accepted_energies) - energy) < ENERGY_THRESHOLD)[0]
 			charges = [{'H': 1, 'C': 6, 'N': 7, 'O': 8}[_] for _ in atoms]
 			rep = generate_fchl_acsf(charges, coordinates, pad=len(atoms))
-			for i in range(len(accepted_energies)):
-				if abs(accepted_energies[i] - energy) < ENERGY_THRESHOLD:
-					sim = get_global_kernel(np.array([rep]), np.array(accepted_reps), np.array([charges]), np.array([charges]*len(accepted_reps)), QML_FCHL_SIGMA)
-					if np.max(sim) > QML_FCHL_THRESHOLD:
-						break
-			else:
+			include = True
+			if len(compare_required) > 0:
+				sim = get_global_kernel(np.array([rep]), np.array(accepted_reps)[compare_required], np.array([charges]), np.array([charges]*len(compare_required)), QML_FCHL_SIGMA)
+				if np.max(sim) > QML_FCHL_THRESHOLD:
+					include = False
+			if include:
 				accepted_energies.append(energy)
 				accepted_geometries.append(geometry)
 				accepted_bondorders.append(bondorders)
