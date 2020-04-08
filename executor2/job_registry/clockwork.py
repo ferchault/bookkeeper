@@ -10,10 +10,15 @@ import numpy as np
 import itertools as it
 from rdkit import Chem
 from rdkit.Chem import AllChem, ChemicalForceFields
+import qml
+from qml.kernels import get_global_kernel
+from qml.representations import generate_fchl_acsf
 
 ENERGY_THRESHOLD = 1e-4
 ANGLE_DELTA = 1e-7
 FF_RELAX_STEPS = 50
+QML_FCHL_SIGMA = 4
+QML_FCHL_THRESHOLD = 0.9
 
 class Task():
 	def __init__(self, connection):
@@ -65,7 +70,7 @@ class Task():
 		atoms = [atom.GetSymbol() for atom in mol.GetAtoms()]
 		coordinates = conformer.GetPositions()
 
-		return f'{len(atoms)}\n\n' + '\n'.join([f'{element} {coords[0]} {coords[1]} {coords[2]}' for element, coords in zip(atoms, coordinates)])
+		return f'{len(atoms)}\n\n' + '\n'.join([f'{element} {coords[0]} {coords[1]} {coords[2]}' for element, coords in zip(atoms, coordinates)]), atoms, coordinates
 
 	def _xtbgeoopt(self, xyzgeometry, charge):
 		with open("run.xyz", "w") as fh:
@@ -117,8 +122,9 @@ class Task():
 		accepted_geometries = []
 		accepted_energies = []
 		accepted_bondorders = []
+		accepted_reps = []
 		for angles in it.product(scanangles, repeat=ndih):
-			xyzfile = self._get_classical_constrained_geometry(dihedrals, angles)
+			xyzfile, atoms, coordinates = self._get_classical_constrained_geometry(dihedrals, angles)
 			bondorders, geometry, bonds, energy, vertical_energy = self._xtbgeoopt(xyzfile, 0)
 			try:
 				energy = float(energy)
@@ -128,16 +134,18 @@ class Task():
 			# require same molecule
 			if set(bonds) != self._bonds:
 				continue
-
+			charges = [{'H': 1, 'C': 6, 'N': 7, 'O': 8}[_] for _ in atoms]
+			rep = generate_fchl_acsf(charges, coordinates, pad=len(atoms))
 			for i in range(len(accepted_energies)):
 				if abs(accepted_energies[i] - energy) < ENERGY_THRESHOLD:
-					print ("need compare")
-					break
+					sim = get_global_kernel(np.array([rep]), np.array(accepted_reps), np.array([charges]), np.array([charges]*len(accepted_reps)), QML_FCHL_SIGMA)
+					if np.max(sim) > QML_FCHL_THRESHOLD:
+						break
 			else:
-				print ("accepted")
 				accepted_energies.append(energy)
 				accepted_geometries.append(geometry)
 				accepted_bondorders.append(bondorders)
+				accepted_reps.append(rep)
 		
 		results = {}
 		results['mol'] = molname
