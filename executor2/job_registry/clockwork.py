@@ -132,8 +132,11 @@ class Task():
 		accepted_bondorders = []
 		accepted_reps = []
 		for angles in it.product(scanangles, repeat=ndih):
-			xyzfile, atoms, coordinates = self._get_classical_constrained_geometry(dihedrals, angles)
-			bondorders, geometry, bonds, energy, vertical_energy = self._xtbgeoopt(xyzfile, 0)
+			try:
+				xyzfile, atoms, coordinates = self._get_classical_constrained_geometry(dihedrals, angles)
+				bondorders, geometry, bonds, energy, vertical_energy = self._xtbgeoopt(xyzfile, 0)
+			except:
+				continue
 			try:
 				energy = float(energy)
 			except ValueError:
@@ -176,7 +179,7 @@ class Task():
 		os.chdir(self._tmpdir)
 
 		# parse commandstring
-		# molname:dih1-dih2-dih3:4
+		# molname:1-2-3:4
 		parts = commandstring.split(":")
 		molname = parts[0]
 		dihedrals = [int(_) for _ in parts[1].split("-")]
