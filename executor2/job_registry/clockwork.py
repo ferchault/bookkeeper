@@ -17,8 +17,8 @@ from qml.representations import generate_fchl_acsf
 ENERGY_THRESHOLD = 1e-4
 ANGLE_DELTA = 1e-7
 FF_RELAX_STEPS = 50
-QML_FCHL_SIGMA = 4
-QML_FCHL_THRESHOLD = 0.9
+QML_FCHL_SIGMA = 2
+QML_FCHL_THRESHOLD = 0.98
 
 class Task():
 	def __init__(self, connection):
