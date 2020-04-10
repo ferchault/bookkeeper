@@ -7,7 +7,7 @@ import sys
 def get_redis_capacity(redis_cpu_load, submitted_count_this_hour, total_queueing, total_running, queue_depth):
 	""" If negative, signals failure, requires halting."""
 	max_cpu = 0.8  # accpeptable redis cpu load
-	max_per_hour = 2000  # largest number of jobs started per hour
+	max_per_hour = 5000  # largest number of jobs started per hour
 	min_cores = 100  # smallest work force
 	accepted_failure_count = 100  # in last hour
 
