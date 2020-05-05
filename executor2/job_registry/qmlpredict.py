@@ -19,17 +19,17 @@ class Task():
 		cutoff = 9000
 		basename = '/mnt/c/Users/guido/data/tmp-enrico/'
 		included = open(basename + 'production/index_nonegative_new.dat').readlines()[:cutoff]
-		lines = []
-		import tqdm
-		for geo in tqdm.tqdm(included):
-			geo = geo.strip().rjust(5, '0')
-			filename = f'{basename}random/random-{geo}.xyz'
-			lines += [_.strip() for _ in open(filename).readlines()]
+		#lines = []
+		#import tqdm
+		#for geo in tqdm.tqdm(included):
+		#	geo = geo.strip().rjust(5, '0')
+		#	filename = f'{basename}random/random-{geo}.xyz'
+		#	lines += [_.strip() for _ in open(filename).readlines()]
 		
-		self.connection.set("qml-structures", gzip.compress(('\n'.join(lines)).encode('ascii')))
-		self.connection.set("qml-alphas1", gzip.compress(open(f'{basename}production/alphaS1_65.536_7.dat').read().encode('ascii')))
-		self.connection.set("qml-alphas2", gzip.compress(open(f'{basename}production/alphaS2_65.536_7.dat').read().encode('ascii')))
-		self.connection.set("qml-alphas3", gzip.compress(open(f'{basename}production/alphaS3_65.536_7.dat').read().encode('ascii')))
+		#self.connection.set("qml-structures", gzip.compress(('\n'.join(lines)).encode('ascii')))
+		self.connection.set("qml-alphas1", gzip.compress(open(f'{basename}production/alphaS1_osc_0.128_7.dat').read().encode('ascii')))
+		self.connection.set("qml-alphas2", gzip.compress(open(f'{basename}production/alphaS2_osc_0.128_7.dat').read().encode('ascii')))
+		self.connection.set("qml-alphas3", gzip.compress(open(f'{basename}production/alphaS3_osc_0.128_7.dat').read().encode('ascii')))
 		
 	def __init__(self, connection):
 		self.connection = connection
@@ -65,7 +65,7 @@ class Task():
 		c = qml.Compound(xyz=xyz)
 		rep = qml.representations.generate_fchl_acsf(c.nuclear_charges, c.coordinates, gradients=False, pad=31, elements=[1,6,8])
 		
-		K = qml.kernels.get_local_kernel(self._reps, np.array([rep]), self._Qs, [c.nuclear_charges], 65.536)
+		K = qml.kernels.get_local_kernel(self._reps, np.array([rep]), self._Qs, [c.nuclear_charges], 0.128)
 		preds1 = np.dot(K, self._alphas1)[0]
 		preds2 = np.dot(K, self._alphas2)[0]
 		preds3 = np.dot(K, self._alphas3)[0]
