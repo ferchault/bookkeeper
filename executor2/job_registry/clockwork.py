@@ -89,6 +89,10 @@ class Task():
 					energy = line.strip().split()[-3]
 				if vertical_energy is None and " :: total energy " in line:
 					vertical_energy = line.strip().split()[-3]
+				if "convergence criteria cannot be satisfied" in line:
+					raise ValueError("unconverged")
+				if "SCC did not converge" in line:
+					raise ValueError("unconverged")
 
 		# read geometry
 		with open("xtbopt.xyz") as fh:
