@@ -5,6 +5,7 @@ import uuid
 import shutil
 import os
 import subprocess
+import math
 import json
 import numpy as np
 import itertools as it
@@ -93,6 +94,8 @@ class Task():
 					raise ValueError("unconverged")
 				if "SCC did not converge" in line:
 					raise ValueError("unconverged")
+		if math.isnan(energy) or energy == "failed":
+			raise ValueError("nan energy")
 
 		# read geometry
 		with open("xtbopt.xyz") as fh:
