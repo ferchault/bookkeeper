@@ -3,11 +3,13 @@
 #SBATCH --time=02:00:00
 #SBATCH --partition=normal,classic,long,highershort
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=1G
+#SBATCH --mem=3G
 #SBATCH --output=/dev/null 
 #SBATCH --error=/dev/null
 
 export OMP_NUM_THREADS=1
+export MKL_NUM_THREADS=1
+export OPENBLAS_NUM_THREADS=1
 source ~/.executor
 conda activate redis-worker
 cd /home/vonrudorff/workcopies/bookkeeper/executor2

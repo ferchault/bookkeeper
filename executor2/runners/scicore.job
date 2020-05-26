@@ -8,6 +8,8 @@
 #SBATCH --error=/dev/null 
 
 export OMP_NUM_THREADS=1
+export MKL_NUM_THREADS=1
+export OPENBLAS_NUM_THREADS=1
 source /scicore/home/lilienfeld/rudorff/.executor
 # !! Contents within this block are managed by 'conda init' !!
 __conda_setup="$('/scicore/home/lilienfeld/rudorff/opt/conda/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
