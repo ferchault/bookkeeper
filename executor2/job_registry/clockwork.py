@@ -13,6 +13,7 @@ from rdkit.Chem import AllChem, ChemicalForceFields
 import qml
 from qml.kernels import get_global_kernel
 from qml.representations import generate_fchl_acsf
+import xyz2mol
 
 ENERGY_THRESHOLD = 1e-4
 ANGLE_DELTA = 1e-7
@@ -44,6 +45,25 @@ class Task():
 			step = 360.0 / 2.0 ** (resolution-1)
 			n_steps = 2 ** (resolution - 1)
 		return start, step, n_steps
+
+	def _get_smiles(self, xyzgeometry):
+		atoms = []
+		coords = []
+		lines = xyzgeometry.split("\n")
+		natoms = int(lines[0])
+		for line in lines[2:natoms+2]:
+			parts = line.strip().split()
+			atoms.append(xyz2mol.int_atom(parts[0]))
+			coords.append((float(parts[1]), float(parts[2]), float(parts[3])))
+		
+		mol = xyz2mol.xyz2mol(atoms, coords, charge=0)
+
+		# canonicalize
+		smiles = Chem.MolToSmiles(mol)
+		m = Chem.MolFromSmiles(smiles)
+		smiles = Chem.MolToSmiles(m)
+
+		return smiles
 
 	def _get_classical_constrained_geometry(self, dihedrals, angles):
 		mol = Chem.MolFromMolBlock(self._sdfstr, removeHs=False)
@@ -78,7 +98,7 @@ class Task():
 
 		# call xtb
 		with open("run.log", "w") as fh:
-			subprocess.run([self._xtbpath, "run.xyz", "--opt", "--wbo", "-c", str(charge)], stdout=fh, stderr=fh)
+			subprocess.run([self._xtbpath, "run.xyz", "--opt", "-c", str(charge)], stdout=fh, stderr=fh)
 
 		# read energy
 		energy = "failed"
@@ -87,8 +107,6 @@ class Task():
 			for line in fh:
 				if "  | TOTAL ENERGY  " in line:
 					energy = line.strip().split()[-3]
-				if vertical_energy is None and " :: total energy " in line:
-					vertical_energy = line.strip().split()[-3]
 				if "convergence criteria cannot be satisfied" in line:
 					raise ValueError("unconverged")
 				if "SCC did not converge" in line:
@@ -98,20 +116,7 @@ class Task():
 		with open("xtbopt.xyz") as fh:
 			geometry = fh.read()
 
-		# read bonds
-		with open("wbo") as fh:
-			lines = fh.readlines()
-		bonds = []
-		bondorders = []
-		for line in lines:
-			parts = line.strip().split()
-			bondorders.append(float(parts[-1]))
-			parts = parts[:2]
-			parts = [int(_)-1 for _ in parts]
-			parts = (min(parts), max(parts))
-			bonds.append(parts)
-
-		return bondorders, geometry, bonds, energy, vertical_energy
+		return geometry, energy
 
 	def _condense_geo(self, instring):
 		lines = instring.split("\n")[2:]
@@ -130,6 +135,7 @@ class Task():
 		self._sdfstr = self._connection.get(f'clockwork:{molname}:sdf').decode("ascii")
 		self._torsions = json.loads(self._connection.get(f'clockwork:{molname}:dihedrals').decode("ascii"))
 		self._bonds = set([tuple(_) for _ in json.loads(self._connection.get(f'clockwork:{molname}:bonds').decode("ascii"))])
+		self._smiles = self._connection.get(f'clockwork:{molname}:smiles').decode("ascii")
 
 		accepted_geometries = []
 		accepted_energies = []
@@ -138,7 +144,7 @@ class Task():
 		for angles in it.product(scanangles, repeat=ndih):
 			try:
 				xyzfile, atoms, coordinates = self._get_classical_constrained_geometry(dihedrals, angles)
-				bondorders, geometry, bonds, energy, vertical_energy = self._xtbgeoopt(xyzfile, 0)
+				geometry, energy = self._xtbgeoopt(xyzfile, 0)
 			except:
 				continue
 			try:
@@ -147,7 +153,7 @@ class Task():
 				continue
 
 			# require same molecule
-			if set(bonds) != self._bonds:
+			if self._get_smiles(geometry) != self._smiles:
 				continue
 
 			# check for similar energies in list
@@ -162,7 +168,6 @@ class Task():
 			if include:
 				accepted_energies.append(energy)
 				accepted_geometries.append(self._condense_geo(geometry))
-				accepted_bondorders.append(bondorders)
 				accepted_reps.append(rep)
 		
 		results = {}
@@ -171,7 +176,6 @@ class Task():
 		results['res'] = resolution
 		results['geo'] = accepted_geometries
 		results['ene'] = accepted_energies
-		results['wbo'] = accepted_bondorders
 		return results
 
 	def run(self, commandstring):
