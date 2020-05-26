@@ -115,7 +115,8 @@ class Task():
 					raise ValueError("unconverged")
 				if "SCC did not converge" in line:
 					raise ValueError("unconverged")
-		if math.isnan(energy) or energy == "failed":
+
+		if math.isnan(float(energy)) or energy == "failed":
 			raise ValueError("nan energy")
 
 		# read geometry
