@@ -24,6 +24,7 @@ else
 fi
 unset __conda_setup
 # <<< conda initialize <<<
+export PYTHONPATH="/scicore/home/lilienfeld/rudorff/.local/lib/python3.8/site-packages:$PYTHONPATH"
 conda activate redis-worker
 
 cd /scicore/home/lilienfeld/rudorff/workcopies/bookkeeper/executor2/ 
