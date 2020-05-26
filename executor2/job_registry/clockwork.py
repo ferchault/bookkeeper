@@ -8,12 +8,15 @@ import subprocess
 import json
 import numpy as np
 import itertools as it
-from rdkit import Chem
+from rdkit import Chem, RDLogger
 from rdkit.Chem import AllChem, ChemicalForceFields
 import qml
 from qml.kernels import get_global_kernel
 from qml.representations import generate_fchl_acsf
 import xyz2mol
+
+# disable low-level logging output
+RDLogger.DisableLog('rdApp.*') 
 
 ENERGY_THRESHOLD = 1e-4
 ANGLE_DELTA = 1e-7
