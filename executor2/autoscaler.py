@@ -26,8 +26,8 @@ username = getpass.getuser()
 tmpfile = "/tmp/%s.autoscaler-tmp" % username
 
 if hostname == "scicore":
-	qoss = ['30min', '6hours']
-	times = ['00:30:00', '06:00:00']
+	qoss = ['30min', '6hours', '1day']
+	times = ['00:30:00', '06:00:00', '24:00:00']
 else:
 	qoss = ['noqos']
 	times = ['notime']
