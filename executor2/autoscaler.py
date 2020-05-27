@@ -47,6 +47,8 @@ for qos, stime in zip(qoss, times):
 
 	# submit additional jobs
 	max_pending = 50
+	if qos == "noqos":
+		max_pending = 100
 	free_slots = max(0, max_pending - pending)
 	keyname = "meta:submitted:%d" % (int(time.time()) // 3600)
 	added = 0
