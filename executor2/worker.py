@@ -7,6 +7,7 @@ import time
 import traceback
 import importlib
 import signal
+import getpass
 import lz4.frame as lz4
 
 redis = Redis.from_url("redis://" + os.environ.get("EXECUTOR_CONSTR", "127.0.0.1:6379/0"))
@@ -54,7 +55,8 @@ while not guard.stopped:
 		retcontent = result
 	except:
 		errored = True
-		what = traceback.format_exc()
+		what = getpass.getuser() + str(sys.path)
+		what += traceback.format_exc()
 		retkey = "error"
 		retcontent = what
 
