@@ -162,7 +162,11 @@ class Task():
 				continue
 
 			# require same molecule
-			if self._get_smiles(geometry) != self._smiles:
+			try:
+				newsmiles = self._get_smiles(geometry)
+			except:
+				continue
+			if newsmiles != self._smiles:
 				continue
 
 			# check for similar energies in list
