@@ -4,7 +4,9 @@ from job_registry import base
 import sys
 import os
 import time
+import string
 import traceback
+import random
 import importlib
 import signal
 import getpass
@@ -26,6 +28,10 @@ signal.signal(signal.SIGINT, guard.handler)
 signal.signal(signal.SIGTERM, guard.handler)
 
 cache = {}
+
+# identify client to server based on host
+randomid = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(10))
+redis.client_setname(base.get_hostname() + ":" + randomid)
 
 while not guard.stopped:
 	starttime = time.time()
