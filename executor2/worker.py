@@ -35,21 +35,26 @@ cache = {}
 randomid = "".join(
     random.choice(string.ascii_uppercase + string.digits) for _ in range(10)
 )
-redis.client_setname(base.get_hostname() + ":" + randomid)
+myhost = base.get_hostname()
+redis.client_setname(myhost + ":" + randomid)
 
 while not guard.stopped:
+    bytecost = 0
     starttime = time.time()
     # fetch
     jobid = redis.rpoplpush("queue", "running")
     if jobid is None:
         break
+    bytecost += 20 + len(jobid)
     jobid = jobid.decode("utf-8")
     try:
         payload, filename = redis.hmget("job:" + jobid, "arg", "fname")
+        bytecost += len(payload) + len(filename) + 20
         filename = filename.decode("utf-8")
     except:
         # No valid job decription available anymore
         redis.lrem("running", 1, jobid)
+        bytecost += 20 + len(jobid)
         continue
 
     # execute
@@ -79,15 +84,22 @@ while not guard.stopped:
         pipe.expire(prefix, 60)
         pipe.delete(prefix + ":duration")
         pipe.delete(prefix + ":failed")
+        bytecost += len(prefix) * 4 + 20 + 5 + 10 + 10
 
     pipe.lpush(prefix + ":duration", duration)
+    bytecost += len(prefix) + 10 + 10
     if errored:
         pipe.incr(prefix + ":failed")
         pipe.lpush("%s:failed" % filename, jobid)
+        bytecost += len(prefix) + 20 + len(filename) + len(jobid)
     else:
         pipe.hdel("job:" + jobid, "arg")
+        bytecost += len(jobid) + 5
 
     pipe.hset("job:" + jobid, retkey, retcontent)
     pipe.lrem("running", 1, jobid)
+    bytecost += 20 + 2*len(jobid) + len(retkey) + len(retcontent)
+    bytecost += 20
 
+    pipe.incrbyfloat("traffic:" + myhost, float(bytecost))
     pipe.execute()
