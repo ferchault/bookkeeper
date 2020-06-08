@@ -15,6 +15,7 @@ import qml
 from qml.kernels import get_global_kernel
 from qml.representations import generate_fchl_acsf
 import xyz2mol
+import functools
 
 # disable low-level logging output
 RDLogger.DisableLog('rdApp.*') 
@@ -24,6 +25,28 @@ ANGLE_DELTA = 1e-7
 FF_RELAX_STEPS = 50
 QML_FCHL_SIGMA = 2
 QML_FCHL_THRESHOLD = 0.98
+
+@functools.lru_cache(maxsize=100)
+def _fetch_problem_description(connection, molname):
+	bytecost = 0
+
+	raw = connection.get(f'clockwork:{molname}:sdf')
+	bytecost += len(raw)
+	sdfstr = raw.decode("ascii")
+
+	raw = connection.get(f'clockwork:{molname}:dihedrals')
+	bytecost += len(raw)
+	torsions = json.loads(raw.decode("ascii"))
+
+	raw = connection.get(f'clockwork:{molname}:bonds')
+	bytecost += len(raw)
+	bonds = set([tuple(_) for _ in json.loads(raw.decode("ascii"))])
+
+	raw = connection.get(f'clockwork:{molname}:smiles')
+	bytecost += len(raw)
+	smiles = raw.decode("ascii")
+
+	return sdfstr, torsions, bonds, smiles, bytecost + 4*20
 
 class Task():
 	def __init__(self, connection):
@@ -141,10 +164,9 @@ class Task():
 		scanangles = np.arange(start, start+step*n_steps, step)
 
 		# fetch input
-		self._sdfstr = self._connection.get(f'clockwork:{molname}:sdf').decode("ascii")
-		self._torsions = json.loads(self._connection.get(f'clockwork:{molname}:dihedrals').decode("ascii"))
-		self._bonds = set([tuple(_) for _ in json.loads(self._connection.get(f'clockwork:{molname}:bonds').decode("ascii"))])
-		self._smiles = self._connection.get(f'clockwork:{molname}:smiles').decode("ascii")
+		self._sdfstr, self._torsions, self._bonds, self._smiles, bytecost = _fetch_problem_description(self._connection, molname)
+		if _fetch_problem_description.cache_info().hits > 0:
+			bytecost = 0
 
 		accepted_geometries = []
 		accepted_energies = []
@@ -189,7 +211,7 @@ class Task():
 		results['res'] = resolution
 		results['geo'] = accepted_geometries
 		results['ene'] = accepted_energies
-		return results
+		return results, bytecost
 
 	def run(self, commandstring):
 		# Allow for cached scratchdir
@@ -206,10 +228,10 @@ class Task():
 		dihedrals = [int(_) for _ in parts[1].split("-")]
 		resolution = int(parts[2])
 
-		result = self._do_workpackage(molname, dihedrals, resolution)
+		result, bytecost = self._do_workpackage(molname, dihedrals, resolution)
 
 		# cleanup
 		os.chdir("..")
 		shutil.rmtree(self._tmpdir)
 
-		return json.dumps(result)
+		return json.dumps(result), bytecost

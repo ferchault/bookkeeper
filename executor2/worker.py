@@ -65,7 +65,8 @@ while not guard.stopped:
             cache[filename] = mod.Task(redis)
         task = cache[filename]
         commandstring = lz4.decompress(payload).decode("ascii")
-        result = task.run(commandstring)
+        result, trafficcost = task.run(commandstring)
+        bytecost += trafficcost
         retkey = "result"
         retcontent = result
     except:
