@@ -9,7 +9,7 @@ import sys
 
 constr = os.environ.get("EXECUTOR_CONSTR", "127.0.0.1:6379/0")
 CALL_INTERVAL=5*60  # crontab interval in seconds
-MAX_KBPS_SCICORE=10*1024
+MAX_KBPS_SCICORE=10*1024/3
 
 # change db to 0
 parts = constr.split("/")
@@ -40,7 +40,7 @@ local_capacity = 1e4
 if hostname == "scicore":
 	clients = len(["one" for _ in redis.client_list() if 'scicore' in _['name']])
 	total_traffic_bytes = float(redis4.get("traffic:scicore"))
-	KBps_per_worker = total_traffic_bytes /1024 / CALL_INTERVAL
+	KBps_per_worker = total_traffic_bytes /clients/1024 / CALL_INTERVAL
 	local_capacity = min(local_capacity, int(MAX_KBPS_SCICORE/KBps_per_worker))
 	redis4.set("traffic:scicore", 0)
 	
