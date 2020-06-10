@@ -5,7 +5,6 @@ import sys
 import os
 import uuid
 import tqdm
-import lz4.frame as lz4
 
 redis = Redis.from_url(
     "redis://" + os.environ.get("EXECUTOR_CONSTR", "127.0.0.1:6379/0")
@@ -34,7 +33,7 @@ for lineno in tqdm.tqdm(range(totalentries)):
         continue
     jobid = result.split()[-1]
     line = lines[lineno].rstrip()
-    payload = lz4.compress(line.encode("ascii"))
+    payload = line
     pipe.hmset("job:" + jobid, {"fname": taskname, "arg": payload})
     pipe.lpush("queue", jobid)
     bulksize += 1

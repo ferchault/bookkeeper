@@ -5,7 +5,6 @@ import sys
 import os
 import uuid
 import tqdm
-import lz4.frame as lz4
 
 redis = Redis.from_url(
     "redis://" + os.environ.get("EXECUTOR_CONSTR", "127.0.0.1:6379/0")
@@ -30,7 +29,7 @@ bulksize = 0
 totalentries = len(lines)
 for lineno in tqdm.tqdm(range(totalentries)):
     line = lines[lineno].rstrip()
-    payload = lz4.compress(line.encode("ascii"))
+    payload = line
     jobid = str(uuid.uuid4())
     results.append("JOB: " + jobid)
 

@@ -9,7 +9,6 @@ redis = Redis.from_url(
 
 from job_registry import base
 import sys
-import lz4.frame as lz4
 
 jobid = f"job:{sys.argv[1]}"
 
@@ -19,6 +18,6 @@ if known is None:
     sys.exit(1)
 
 if b"error" in known:
-    commandstring = lz4.decompress(known[b"arg"]).decode("ascii")
+    commandstring = known[b"arg"].decode("ascii")
     print(f"Task: {known[b'fname'].decode('ascii')}('{commandstring}')")
     print("\nFAILED:\n" + known[b"error"].decode("ascii"))
