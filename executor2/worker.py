@@ -50,7 +50,7 @@ while not guard.stopped:
     try:
         payload, filename = redis.hmget("job:" + jobid, "arg", "fname")
         bytecost += len(payload) + len(filename) + 20
-        filename = filename.decode("utf-8")
+        filename = filename.decode("ascii")
     except:
         # No valid job decription available anymore
         redis.lrem("running", 1, jobid)
@@ -64,7 +64,7 @@ while not guard.stopped:
             mod = importlib.import_module("job_registry.%s" % filename)
             cache[filename] = mod.Task(redis)
         task = cache[filename]
-        commandstring = payload
+        commandstring = payload.decode("ascii")
         result, trafficcost = task.run(commandstring)
         bytecost += trafficcost
         retkey = "result"
