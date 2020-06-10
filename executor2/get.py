@@ -2,6 +2,7 @@
 from redis import Redis
 import os
 import tqdm
+import gzip
 
 redis = Redis.from_url(
     "redis://" + os.environ.get("EXECUTOR_CONSTR", "127.0.0.1:6379/0")
@@ -23,7 +24,7 @@ def communicate(results, jobids):
     for result, jobid in zip(downloaded, jobids):
         if result is not None:
             pipe.delete("job:%s" % jobid)
-            results.append(result.decode("ascii"))
+            results.append(gzip.decompress(result).decode("ascii"))
         else:
             results.append("JOB: " + jobid)
     pipe.execute()
