@@ -99,7 +99,7 @@ while not guard.stopped:
 
     pipe.hset("job:" + jobid, retkey, retcontent)
     pipe.lrem("running", 1, jobid)
-    bytecost += 20 + 2*len(jobid) + len(retkey) + len(retcontent)
+    bytecost += 20 + 2 * len(jobid) + len(retkey) + len(retcontent)
     bytecost += 20
 
     pipe.incrbyfloat("traffic:" + myhost, float(bytecost))

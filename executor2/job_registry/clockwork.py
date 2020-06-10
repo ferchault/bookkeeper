@@ -18,7 +18,7 @@ import xyz2mol
 import functools
 
 # disable low-level logging output
-RDLogger.DisableLog('rdApp.*') 
+RDLogger.DisableLog("rdApp.*")
 
 ENERGY_THRESHOLD = 1e-4
 ANGLE_DELTA = 1e-7
@@ -26,212 +26,250 @@ FF_RELAX_STEPS = 50
 QML_FCHL_SIGMA = 2
 QML_FCHL_THRESHOLD = 0.98
 
+
 @functools.lru_cache(maxsize=100)
 def _fetch_problem_description(connection, molname):
-	bytecost = 0
+    bytecost = 0
 
-	raw = connection.get(f'clockwork:{molname}:sdf')
-	bytecost += len(raw)
-	sdfstr = raw.decode("ascii")
+    raw = connection.get(f"clockwork:{molname}:sdf")
+    bytecost += len(raw)
+    sdfstr = raw.decode("ascii")
 
-	raw = connection.get(f'clockwork:{molname}:dihedrals')
-	bytecost += len(raw)
-	torsions = json.loads(raw.decode("ascii"))
+    raw = connection.get(f"clockwork:{molname}:dihedrals")
+    bytecost += len(raw)
+    torsions = json.loads(raw.decode("ascii"))
 
-	raw = connection.get(f'clockwork:{molname}:bonds')
-	bytecost += len(raw)
-	bonds = set([tuple(_) for _ in json.loads(raw.decode("ascii"))])
+    raw = connection.get(f"clockwork:{molname}:bonds")
+    bytecost += len(raw)
+    bonds = set([tuple(_) for _ in json.loads(raw.decode("ascii"))])
 
-	raw = connection.get(f'clockwork:{molname}:smiles')
-	bytecost += len(raw)
-	smiles = raw.decode("ascii")
+    raw = connection.get(f"clockwork:{molname}:smiles")
+    bytecost += len(raw)
+    smiles = raw.decode("ascii")
 
-	return sdfstr, torsions, bonds, smiles, bytecost + 4*20
+    return sdfstr, torsions, bonds, smiles, bytecost + 4 * 20
 
-class Task():
-	def __init__(self, connection):
-		self._hostname = base.get_hostname()
-		self._scratch = base.get_scratch(self._hostname)
-		self._tmpdir = self._scratch + "/" + str(uuid.uuid4())
-		self._connection = connection
-	
-		self._xtbpath = {
-			"bismuth": "/mnt/c/Users/guido/opt/xtb/6.2.2/bin/xtb",
-			"alchemy": "/home/vonrudorff/opt/xtb/xtb_6.2.2/bin/xtb",
-			"avl03": "/home/grudorff/opt/xtb/xtb_6.2.2/bin/xtb",
-			"scicore": "/scicore/home/lilienfeld/rudorff/opt/xtb/xtb_6.2.2/bin/xtb"
-		}[self._hostname]
 
-	def _clockwork(self, resolution):
-		if resolution == 0:
-			start = 0
-			step = 360
-			n_steps = 1
-		else:
-			start = 360.0 / 2.0 ** (resolution)
-			step = 360.0 / 2.0 ** (resolution-1)
-			n_steps = 2 ** (resolution - 1)
-		return start, step, n_steps
+class Task:
+    def __init__(self, connection):
+        self._hostname = base.get_hostname()
+        self._scratch = base.get_scratch(self._hostname)
+        self._tmpdir = self._scratch + "/" + str(uuid.uuid4())
+        self._connection = connection
 
-	def _get_smiles(self, xyzgeometry):
-		atoms = []
-		coords = []
-		lines = xyzgeometry.split("\n")
-		natoms = int(lines[0])
-		for line in lines[2:natoms+2]:
-			parts = line.strip().split()
-			atoms.append(xyz2mol.int_atom(parts[0]))
-			coords.append((float(parts[1]), float(parts[2]), float(parts[3])))
-		
-		mol = xyz2mol.xyz2mol(atoms, coords, charge=0)
+        self._xtbpath = {
+            "bismuth": "/mnt/c/Users/guido/opt/xtb/6.2.2/bin/xtb",
+            "alchemy": "/home/vonrudorff/opt/xtb/xtb_6.2.2/bin/xtb",
+            "avl03": "/home/grudorff/opt/xtb/xtb_6.2.2/bin/xtb",
+            "scicore": "/scicore/home/lilienfeld/rudorff/opt/xtb/xtb_6.2.2/bin/xtb",
+        }[self._hostname]
 
-		# canonicalize
-		smiles = Chem.MolToSmiles(mol)
-		m = Chem.MolFromSmiles(smiles)
-		smiles = Chem.MolToSmiles(m)
+    def _clockwork(self, resolution):
+        if resolution == 0:
+            start = 0
+            step = 360
+            n_steps = 1
+        else:
+            start = 360.0 / 2.0 ** (resolution)
+            step = 360.0 / 2.0 ** (resolution - 1)
+            n_steps = 2 ** (resolution - 1)
+        return start, step, n_steps
 
-		return smiles
+    def _get_smiles(self, xyzgeometry):
+        atoms = []
+        coords = []
+        lines = xyzgeometry.split("\n")
+        natoms = int(lines[0])
+        for line in lines[2 : natoms + 2]:
+            parts = line.strip().split()
+            atoms.append(xyz2mol.int_atom(parts[0]))
+            coords.append((float(parts[1]), float(parts[2]), float(parts[3])))
 
-	def _get_classical_constrained_geometry(self, dihedrals, angles):
-		mol = Chem.MolFromMolBlock(self._sdfstr, removeHs=False)
+        mol = xyz2mol.xyz2mol(atoms, coords, charge=0)
 
-		ffprop = ChemicalForceFields.MMFFGetMoleculeProperties(mol)
-		ffc = ChemicalForceFields.MMFFGetMoleculeForceField(mol, ffprop)
-		conformer = mol.GetConformer()
+        # canonicalize
+        smiles = Chem.MolToSmiles(mol)
+        m = Chem.MolFromSmiles(smiles)
+        smiles = Chem.MolToSmiles(m)
 
-		# Set angles and constrains for all torsions
-		for dih_id, angle in zip(dihedrals, angles):
-			# Set clockwork angle
-			try: Chem.rdMolTransforms.SetDihedralDeg(conformer, *self._torsions[dih_id], float(angle))
-			except: pass
+        return smiles
 
-			# Set forcefield constrain
-			ffc.MMFFAddTorsionConstraint(*self._torsions[dih_id], False, angle-ANGLE_DELTA, angle+ANGLE_DELTA, 1.0e10)
+    def _get_classical_constrained_geometry(self, dihedrals, angles):
+        mol = Chem.MolFromMolBlock(self._sdfstr, removeHs=False)
 
-		# reduce bad contacts
-		try:
-			ffc.Minimize(maxIts=FF_RELAX_STEPS, energyTol=1e-2, forceTol=1e-3)
-		except RuntimeError:
-			pass
+        ffprop = ChemicalForceFields.MMFFGetMoleculeProperties(mol)
+        ffc = ChemicalForceFields.MMFFGetMoleculeForceField(mol, ffprop)
+        conformer = mol.GetConformer()
 
-		atoms = [atom.GetSymbol() for atom in mol.GetAtoms()]
-		coordinates = conformer.GetPositions()
+        # Set angles and constrains for all torsions
+        for dih_id, angle in zip(dihedrals, angles):
+            # Set clockwork angle
+            try:
+                Chem.rdMolTransforms.SetDihedralDeg(
+                    conformer, *self._torsions[dih_id], float(angle)
+                )
+            except:
+                pass
 
-		return f'{len(atoms)}\n\n' + '\n'.join([f'{element} {coords[0]} {coords[1]} {coords[2]}' for element, coords in zip(atoms, coordinates)]), atoms, coordinates
+            # Set forcefield constrain
+            ffc.MMFFAddTorsionConstraint(
+                *self._torsions[dih_id],
+                False,
+                angle - ANGLE_DELTA,
+                angle + ANGLE_DELTA,
+                1.0e10,
+            )
 
-	def _xtbgeoopt(self, xyzgeometry, charge):
-		with open("run.xyz", "w") as fh:
-			fh.write(xyzgeometry)
+        # reduce bad contacts
+        try:
+            ffc.Minimize(maxIts=FF_RELAX_STEPS, energyTol=1e-2, forceTol=1e-3)
+        except RuntimeError:
+            pass
 
-		# call xtb
-		with open("run.log", "w") as fh:
-			subprocess.run([self._xtbpath, "run.xyz", "--opt", "-c", str(charge)], stdout=fh, stderr=fh)
+        atoms = [atom.GetSymbol() for atom in mol.GetAtoms()]
+        coordinates = conformer.GetPositions()
 
-		# read energy
-		energy = "failed"
-		vertical_energy = None
-		with open("run.log") as fh:
-			for line in fh:
-				if "  | TOTAL ENERGY  " in line:
-					energy = line.strip().split()[-3]
-				if "convergence criteria cannot be satisfied" in line:
-					raise ValueError("unconverged")
-				if "SCC did not converge" in line:
-					raise ValueError("unconverged")
-				if "SCF not converged, aborting" in line:
-					raise ValueError("unconverged")
+        return (
+            f"{len(atoms)}\n\n"
+            + "\n".join(
+                [
+                    f"{element} {coords[0]} {coords[1]} {coords[2]}"
+                    for element, coords in zip(atoms, coordinates)
+                ]
+            ),
+            atoms,
+            coordinates,
+        )
 
-		if math.isnan(float(energy)) or energy == "failed":
-			raise ValueError("nan energy")
+    def _xtbgeoopt(self, xyzgeometry, charge):
+        with open("run.xyz", "w") as fh:
+            fh.write(xyzgeometry)
 
-		# read geometry
-		with open("xtbopt.xyz") as fh:
-			geometry = fh.read()
+        # call xtb
+        with open("run.log", "w") as fh:
+            subprocess.run(
+                [self._xtbpath, "run.xyz", "--opt", "-c", str(charge)],
+                stdout=fh,
+                stderr=fh,
+            )
 
-		return geometry, energy
+        # read energy
+        energy = "failed"
+        vertical_energy = None
+        with open("run.log") as fh:
+            for line in fh:
+                if "  | TOTAL ENERGY  " in line:
+                    energy = line.strip().split()[-3]
+                if "convergence criteria cannot be satisfied" in line:
+                    raise ValueError("unconverged")
+                if "SCC did not converge" in line:
+                    raise ValueError("unconverged")
+                if "SCF not converged, aborting" in line:
+                    raise ValueError("unconverged")
 
-	def _condense_geo(self, instring):
-		lines = instring.split("\n")[2:]
-		res = []
-		for line in lines:
-			parts = line.strip().split()
-			res.append(" ".join(parts))
-		return "\n".join(res).strip()
+        if math.isnan(float(energy)) or energy == "failed":
+            raise ValueError("nan energy")
 
-	def _do_workpackage(self, molname, dihedrals, resolution):
-		ndih = len(dihedrals)
-		start, step, n_steps = self._clockwork(resolution)
-		scanangles = np.arange(start, start+step*n_steps, step)
+        # read geometry
+        with open("xtbopt.xyz") as fh:
+            geometry = fh.read()
 
-		# fetch input
-		self._sdfstr, self._torsions, self._bonds, self._smiles, bytecost = _fetch_problem_description(self._connection, molname)
-		if _fetch_problem_description.cache_info().hits > 0:
-			bytecost = 0
+        return geometry, energy
 
-		accepted_geometries = []
-		accepted_energies = []
-		accepted_bondorders = []
-		accepted_reps = []
-		for angles in it.product(scanangles, repeat=ndih):
-			try:
-				xyzfile, atoms, coordinates = self._get_classical_constrained_geometry(dihedrals, angles)
-				geometry, energy = self._xtbgeoopt(xyzfile, 0)
-			except:
-				continue
-			try:
-				energy = float(energy)
-			except ValueError:
-				continue
+    def _condense_geo(self, instring):
+        lines = instring.split("\n")[2:]
+        res = []
+        for line in lines:
+            parts = line.strip().split()
+            res.append(" ".join(parts))
+        return "\n".join(res).strip()
 
-			# require same molecule
-			try:
-				newsmiles = self._get_smiles(geometry)
-			except:
-				continue
-			if newsmiles != self._smiles:
-				continue
+    def _do_workpackage(self, molname, dihedrals, resolution):
+        ndih = len(dihedrals)
+        start, step, n_steps = self._clockwork(resolution)
+        scanangles = np.arange(start, start + step * n_steps, step)
 
-			# check for similar energies in list
-			compare_required = np.where(np.abs(np.array(accepted_energies) - energy) < ENERGY_THRESHOLD)[0]
-			charges = [{'H': 1, 'C': 6, 'N': 7, 'O': 8}[_] for _ in atoms]
-			rep = generate_fchl_acsf(charges, coordinates, pad=len(atoms))
-			include = True
-			if len(compare_required) > 0:
-				sim = get_global_kernel(np.array([rep]), np.array(accepted_reps)[compare_required], np.array([charges]), np.array([charges]*len(compare_required)), QML_FCHL_SIGMA)
-				if np.max(sim) > QML_FCHL_THRESHOLD:
-					include = False
-			if include:
-				accepted_energies.append(energy)
-				accepted_geometries.append(self._condense_geo(geometry))
-				accepted_reps.append(rep)
-		
-		results = {}
-		results['mol'] = molname
-		results['dih'] = dihedrals
-		results['res'] = resolution
-		results['geo'] = accepted_geometries
-		results['ene'] = accepted_energies
-		return results, bytecost
+        # fetch input
+        self._sdfstr, self._torsions, self._bonds, self._smiles, bytecost = _fetch_problem_description(
+            self._connection, molname
+        )
+        if _fetch_problem_description.cache_info().hits > 0:
+            bytecost = 0
 
-	def run(self, commandstring):
-		# Allow for cached scratchdir
-		try:
-			os.makedirs(self._tmpdir)
-		except FileExistsError:
-			pass
-		os.chdir(self._tmpdir)
+        accepted_geometries = []
+        accepted_energies = []
+        accepted_bondorders = []
+        accepted_reps = []
+        for angles in it.product(scanangles, repeat=ndih):
+            try:
+                xyzfile, atoms, coordinates = self._get_classical_constrained_geometry(
+                    dihedrals, angles
+                )
+                geometry, energy = self._xtbgeoopt(xyzfile, 0)
+            except:
+                continue
+            try:
+                energy = float(energy)
+            except ValueError:
+                continue
 
-		# parse commandstring
-		# molname:1-2-3:4
-		parts = commandstring.split(":")
-		molname = parts[0]
-		dihedrals = [int(_) for _ in parts[1].split("-")]
-		resolution = int(parts[2])
+            # require same molecule
+            try:
+                newsmiles = self._get_smiles(geometry)
+            except:
+                continue
+            if newsmiles != self._smiles:
+                continue
 
-		result, bytecost = self._do_workpackage(molname, dihedrals, resolution)
+            # check for similar energies in list
+            compare_required = np.where(
+                np.abs(np.array(accepted_energies) - energy) < ENERGY_THRESHOLD
+            )[0]
+            charges = [{"H": 1, "C": 6, "N": 7, "O": 8}[_] for _ in atoms]
+            rep = generate_fchl_acsf(charges, coordinates, pad=len(atoms))
+            include = True
+            if len(compare_required) > 0:
+                sim = get_global_kernel(
+                    np.array([rep]),
+                    np.array(accepted_reps)[compare_required],
+                    np.array([charges]),
+                    np.array([charges] * len(compare_required)),
+                    QML_FCHL_SIGMA,
+                )
+                if np.max(sim) > QML_FCHL_THRESHOLD:
+                    include = False
+            if include:
+                accepted_energies.append(energy)
+                accepted_geometries.append(self._condense_geo(geometry))
+                accepted_reps.append(rep)
 
-		# cleanup
-		os.chdir("..")
-		shutil.rmtree(self._tmpdir)
+        results = {}
+        results["mol"] = molname
+        results["dih"] = dihedrals
+        results["res"] = resolution
+        results["geo"] = accepted_geometries
+        results["ene"] = accepted_energies
+        return results, bytecost
 
-		return json.dumps(result), bytecost
+    def run(self, commandstring):
+        # Allow for cached scratchdir
+        try:
+            os.makedirs(self._tmpdir)
+        except FileExistsError:
+            pass
+        os.chdir(self._tmpdir)
+
+        # parse commandstring
+        # molname:1-2-3:4
+        parts = commandstring.split(":")
+        molname = parts[0]
+        dihedrals = [int(_) for _ in parts[1].split("-")]
+        resolution = int(parts[2])
+
+        result, bytecost = self._do_workpackage(molname, dihedrals, resolution)
+
+        # cleanup
+        os.chdir("..")
+        shutil.rmtree(self._tmpdir)
+
+        return json.dumps(result), bytecost

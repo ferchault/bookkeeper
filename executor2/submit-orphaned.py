@@ -43,4 +43,3 @@ for lineno in tqdm.tqdm(range(totalentries)):
         pipe = redis.pipeline()
         bulksize = 0
 pipe.execute()
-
