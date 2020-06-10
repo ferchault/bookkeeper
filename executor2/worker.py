@@ -10,7 +10,7 @@ import random
 import importlib
 import signal
 import getpass
-import lz4.frame as lz4
+import gzip
 
 redis = Redis.from_url(
     "redis://" + os.environ.get("EXECUTOR_CONSTR", "127.0.0.1:6379/0")
@@ -64,7 +64,7 @@ while not guard.stopped:
             mod = importlib.import_module("job_registry.%s" % filename)
             cache[filename] = mod.Task(redis)
         task = cache[filename]
-        commandstring = lz4.decompress(payload).decode("ascii")
+        commandstring = payload
         result, trafficcost = task.run(commandstring)
         bytecost += trafficcost
         retkey = "result"
@@ -97,6 +97,7 @@ while not guard.stopped:
         pipe.hdel("job:" + jobid, "arg")
         bytecost += len(jobid) + 5
 
+    retcontent = gzip.compress(retcontent.encode("ascii"))
     pipe.hset("job:" + jobid, retkey, retcontent)
     pipe.lrem("running", 1, jobid)
     bytecost += 20 + 2 * len(jobid) + len(retkey) + len(retcontent)
